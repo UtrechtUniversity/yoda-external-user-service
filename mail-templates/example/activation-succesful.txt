@@ -1,0 +1,12 @@
+Hello [[USERNAME]],
+
+Your Yoda account has successfully been activated.
+You can now use your credentials (your e-mail address and the password you
+provided earlier) to login to any Yoda service.
+
+Please contact the helpdesk by replying to this e-mail if you have any
+questions.
+
+Kind regards,
+
+The Yoda External User Service

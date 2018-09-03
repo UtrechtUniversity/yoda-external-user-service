@@ -1,5 +1,7 @@
 The following files should be provided for e-mails to work:
 
+(examples are provided in the example directory)
+
 invitation.txt            - sent to external users
 invitation-sent.txt       - sent to group managers
 activation-succesful.txt  - sent to external users

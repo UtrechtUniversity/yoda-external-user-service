@@ -1,0 +1,10 @@
+Hello [[CREATOR]],
+
+[[USERNAME]], whom you've invited to Yoda, has activated their account.
+
+Please contact the helpdesk by replying to this e-mail if you have any
+questions.
+
+Kind regards,
+
+The Yoda External User Service
