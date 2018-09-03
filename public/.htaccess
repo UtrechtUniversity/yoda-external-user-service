@@ -4,7 +4,7 @@ RewriteEngine on
 RewriteCond $1 !^(index\.php|robots\.txt|([^/]+/)?static/)
 RewriteRule ^(.*)$ index.php/$1 [L]
 
-SetEnvIf YODA_APP_ROOT ^$ YODA_APP_ROOT=../../extuser
+SetEnvIf YODA_APP_ROOT ^$ YODA_APP_ROOT=../../yoda-external-user-service
 
 ## Forbid embedding this application in other websites.
 ## Disallow loading resources like scripts and stylesheets from third party sources.
