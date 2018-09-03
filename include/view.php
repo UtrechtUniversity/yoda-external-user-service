@@ -4,7 +4,7 @@
 
 /// htmlentities wrapper.
 function escape_html($str) {
-    return htmlentities($str, ENT_HTML5, 'UTF-8');
+    return htmlspecialchars($str, ENT_COMPAT|ENT_HTML5, 'UTF-8');
 }
 
 /// Render a named view.
