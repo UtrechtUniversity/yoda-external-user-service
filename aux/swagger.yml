@@ -1,0 +1,116 @@
+swagger: "2.0"
+info:
+  description: "The Yoda external user service"
+  version: "1.0.0"
+  title: "Yoda external user service API"
+  license:
+    name: "GPLv3"
+host: "extuser.yoda.test"
+basePath: "/api"
+tags:
+- name: "user"
+  description: "User management and authentication"
+schemes:
+- "https"
+- "http"
+paths:
+  /user/add:
+    post:
+      tags:
+      - "user"
+      summary: "Add an external user"
+      description: ""
+      operationId: "addUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User object that needs to be added to user database"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Invalid request"
+        401:
+          description: "Invalid or missing user credentials"
+        403:
+          description: "Unauthorized request (API key may be missing or invalid)"
+        405:
+          description: "Invalid input"
+        409:
+          description: "User with that name already exists"
+        415:
+          description: "Invalid input MIME type"
+  /user/auth-check:
+    post:
+      tags:
+      - "user"
+      summary: "Authenticate an external user"
+      description: "NOTE: The external user credentials must be filled in using HTTP Basic auth"
+      operationId: "authUser"
+      consumes: []
+      produces:
+      - "text/plain"
+      parameters: []
+      responses:
+        200:
+          description: "Success"
+          schema:
+            type: "string"
+        400:
+          description: "Invalid request"
+        401:
+          description: "Invalid or missing user credentials"
+        403:
+          description: "Unauthorized request (API key may be missing or invalid)"
+        405:
+          description: "Invalid input"
+        415:
+          description: "Invalid input MIME type"
+      security:
+        - basicAuth: []
+        - api_key: []
+security:
+  - api_key: []
+securityDefinitions:
+  api_key:
+    type: "apiKey"
+    name: "X-Yoda-External-User-Secret"
+    in: "header"
+  basicAuth:
+    type: basic
+definitions:
+  User:
+    type: "object"
+    properties:
+      username:
+        type: "string"
+        description: "Username of the new external user (must be an e-mail address)"
+      creator_user:
+        type: "string"
+        description: "Username of the creating group manager"
+      creator_zone:
+        type: "string"
+        description: "Zone of the creating group manager"
+    example:
+      username:     "piet@example.com"
+      creator_user: "gm@example.com"
+      creator_zone: "tempZone"
+  ApiResponse:
+    type: "object"
+    properties:
+      status:
+        type: "string"
+      message:
+        type: "string"
+    example:
+      status:  "ok"
+      message: "User created."
