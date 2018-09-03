@@ -6,6 +6,7 @@ function db() {
     static $pdo_ = null;
 
     if ($pdo_ === null) {
+        // No connection yet, set it up.
         try {
             $pdo_ = new \PDO(sprintf("pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
                                      config('db_host'),
@@ -23,7 +24,9 @@ function db() {
     return $pdo_;
 }
 
-/// Assumes field names do not contain odd characters.
+// Database query helpers {{{
+
+/// Quote field names (they should not contain special chars anyway).
 function dbq_quote_field($name) {
     return "\"$name\"";
 }
@@ -39,17 +42,20 @@ function dbq_value_placeholder_list($fields) {
     return ' (' . join(', ', array_map(function($s){return '?';}, $fields)) . ')';
 }
 
+// }}}
+// Database query functions {{{
+
 /// Select a record in the specified table.
+/// Returns null if no record was found.
+/// $pkname can be any UNIQUE column name.
 function db_find($table, $pkname, $pkvalue) {
     $q = 'select * from "' . $table . '"'
          . ' where ' . dbq_quote_field($pkname)
          . ' = ?';
 
-    //echo $q;
     $sth = db()->prepare($q);
     $sth->execute(array($pkvalue));
-    //$sth->execute(array('piet.throwaway@v1a.nl'));
-    //$sth->debugDumpParams();
+
     $row = $sth->fetch(PDO::FETCH_ASSOC);
     if ($row === false)
         return null;
@@ -67,9 +73,7 @@ function db_insert($table, $kvs) {
          . ' values '
          . dbq_value_placeholder_list($fields);
 
-    //echo $q;
     db()->prepare($q)->execute($values);
-    //db()->prepare($q)->execute($kvs);
 }
 
 /// Update a record in the specified table.
@@ -86,7 +90,7 @@ function db_update($table, $pkname, $pkvalue, $kvs) {
 
     $values[] = $pkvalue;
 
-    //echo $q;
     db()->prepare($q)->execute($values);
 }
 
+// }}}

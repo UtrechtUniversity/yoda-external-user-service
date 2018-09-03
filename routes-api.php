@@ -3,6 +3,15 @@
 // Service API requests.
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    // When accessing the API through a web browser, using a tool like
+    // https://swagger.io, OPTIONS requests must be handled.
+    // This is used to notify the web browser through CORS headers that we are
+    // OK with certain sites sending requests to us.
+    // See the public/.htaccess file for the relevant headers and the
+    // whitelisted domains, if any.
+    //
+    // This OPTIONS check has no effect if the CORS headers are disabled in the
+    // .htaccess file, so it can be safely included regardless.
     http_response_code(200);
     exit(0);
 }
@@ -17,11 +26,9 @@ function is_api_request_authenticated() {
 
 /// Decode a JSON request body, and check for required fields.
 /// Returns the required fields in an assoc array.
+/// If the required fields do not exist, sets 400 and exits.
 function decode_api_request_body($fields = array()) {
-    //var_dump($_SERVER);
 
-    //$body = file_get_contents('php://input');
-    //var_dump(json_decode($body));
     $data = json_decode(file_get_contents('php://input'));
     if (!is_object($data)) {
         http_response_code(400); exit(0);
@@ -41,18 +48,22 @@ function decode_api_request_body($fields = array()) {
 }
 
 // }}}
+// API route implementations {{{
 
+/// Create a new external user.
 function api_user_add($username, $creator_user, $creator_zone) {
 
     header('Content-Type: application/json');
 
-    //var_dump($data);
-    //var_dump($u);
     $u = user_find_by_username($username);
 
     if ($u !== null) {
         // If the user already exists, this is not an error.
         // It simply means we have nothing to do :-)
+        //
+        // This may occur if a user was added in zone A,
+        // and is then added in zone B. The iRODS user is newly created, but
+        // the external user already exists.
 
         echo json_encode(array('status'  => 'ok',
                                'message' => 'User already exists.'));
@@ -60,7 +71,9 @@ function api_user_add($username, $creator_user, $creator_zone) {
         exit(0);
     }
 
-    $hash = random_hash(32); // 64 nibbles.
+    // Generate a hash and add the user to the database.
+
+    $hash = random_hash(32); // 64 nibbles / characters.
 
     user_create(array('username'     => $username,
                       'creator_user' => $creator_user,
@@ -70,61 +83,44 @@ function api_user_add($username, $creator_user, $creator_zone) {
 
     $hash_url = base_url("/user/activate/$hash", true);
 
-    // XXX
-    send_mail($username, 'Welcome to Yoda!', <<<EOF
-Hello $username,
+    // Send an invitation e-mail and a confirmation.
 
-A Yoda account has been created for you by $creator_user.
+    send_mail_template($username, config('mail_invitation_subject'),
+                       'invitation',
+                       array('USERNAME' => $username,
+                             'CREATOR'  => $creator_user,
+                             'HASH_URL' => $hash_url));
 
-You can activate your account by visiting the following webpage:
+    send_mail_template($creator_user, config('mail_invitation-sent_subject'),
+                       'invitation-sent',
+                       array('USERNAME' => $username,
+                             'CREATOR'  => $creator_user));
 
-$hash_url
-
-This link will remain valid for 5 days.
-Please contact the helpdesk by replying to this e-mail if you have any
-questions.
-
-Kind regards,
-
-The Yoda External User Service
-EOF
-);
-
-    send_mail($creator_user, "You have invited $username to Yoda", <<<EOF
-Hello $creator_user,
-
-On your request, $username has been invited to Yoda.
-You will receive a confirmation e-mail once they have activated their account.
-
-Please contact the helpdesk by replying to this e-mail if you have any
-questions.
-
-Kind regards,
-
-The Yoda External User Service
-EOF
-);
+    // Success!
 
     echo json_encode(array('status'  => 'ok',
                            'message' => 'User created.'));
 
-    http_response_code(201); exit(0); // "Created"
+    http_response_code(201); exit(0); // 201, "Created"
 }
 
+/// Check a user's credentials.
 function api_user_check_auth() {
 
     $authed = false;
+
+    // Check the credentials in the HTTP Basic auth header.
 
     if (isset($_SERVER['PHP_AUTH_USER'])) {
         $name = $_SERVER['PHP_AUTH_USER'];
         $pass = $_SERVER['PHP_AUTH_PW'];
 
+        // User must exist and password hash must match.
+
         $u = user_find_by_username($name);
         if ($u !== null && password_verify($pass, $u['password']))
             $authed = true;
     }
-
-    //error_log("<$name:$pass>");
 
     if ($authed) {
         header('Content-Type: text/plain');
@@ -135,20 +131,22 @@ function api_user_check_auth() {
     }
 }
 
-
+// }}}
 
 if (!is_api_request_authenticated()) {
+    // All requests must contain an API secret.
     http_response_code(403); exit(0);
 
 } elseif ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    // For now, only accept POST requests with JSON request body on our API.
+    // For now, only accept POST requests.
     http_response_code(405); exit(0);
-} /*elseif ($_SERVER['CONTENT_TYPE'] !== 'application/json') {
-    // For now, only accept JSON request bodies.
-    http_response_code(415); exit(0); // "Unsupported Media Type"
-    }*/
+}
+
+// Perform routing.
 
 if (match_path(request_path(), '/api/user/add')) {
+
+    // Fetch & verify parameters from the JSON request body.
     $data = decode_api_request_body(array('username',
                                           'creator_user',
                                           'creator_zone'));
@@ -159,8 +157,11 @@ if (match_path(request_path(), '/api/user/add')) {
 
 } elseif (match_path(request_path(), '/api/user/auth-check')) {
 
+    // Parameters are in a Basic auth header.
     api_user_check_auth();
 
 } else {
+    // Non-existent API route.
+    // No need to provide any info besides the 404 status code.
     http_response_code(404); exit(0);
 }

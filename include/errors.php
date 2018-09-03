@@ -1,5 +1,7 @@
 <?php
 
+// Sets global error handling and provides a 'fail' function.
+
 $in_error_ = false;
 
 set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext) {
@@ -30,3 +32,9 @@ set_exception_handler(function ($e) {
         render_view('500');
     } catch (Exception $e) { }
 });
+
+/// Throw an exception.
+/// To be used for unrecoverable errors (e.g: logic errors).
+function fail($msg) {
+    throw new Exception($msg);
+}

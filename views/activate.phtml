@@ -2,32 +2,41 @@
     <div class="col-md-offset-2 col-md-8">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Activate your Yoda account</h3>
+                <h3 class="panel-title">Yoda account activation</h3>
             </div>
             <div class="panel-body">
-                <!--<form method="POST" action="?php echo base_url('user/login') ?" class="form-horizontal"> -->
+<?php
+if (isset($data['error'])) {
+?>
+                <div class="alert alert-danger">
+                    <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+                    <?php echo escape_html($data['error']); ?>
+                </div>
+<?php
+}
+?>
                 <form method="POST" class="form-horizontal">
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" for="f-login-username">Username</label>
+                        <label class="col-sm-3 control-label" for="f-activation-username">Username</label>
                         <div class="col-sm-9">
-                            <input name="username" id="f-login-username" class="form-control" type="text" value="<?php echo escape_html($data['username']) ?>" readonly required />
+                            <input name="username" id="f-activation-username" class="form-control" type="text" value="<?php echo escape_html($data['username']) ?>" readonly required />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" for="f-login-password">Password</label>
+                        <label class="col-sm-3 control-label" for="f-activation-password">Password</label>
                         <div class="col-sm-9">
-                            <input name="password" id="f-login-password" class="form-control" type="password" required />
+                            <input name="password" id="f-activation-password" class="form-control" type="password" required />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" for="f-login-password">Password (confirm)</label>
+                        <label class="col-sm-3 control-label" for="f-activation-password-again">Password (confirm)</label>
                         <div class="col-sm-9">
-                            <input name="password_again" id="f-login-password" class="form-control" type="password" required />
+                            <input name="password_again" id="f-activation-password-again" class="form-control" type="password" required />
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="col-sm-offset-3 col-sm-9">
-                            <input id="f-login-submit" class="btn btn-primary" type="submit" value="Activate" />
+                            <input id="f-activation-submit" class="btn btn-primary" type="submit" value="Activate" />
                         </div>
                     </div>
                 </form>

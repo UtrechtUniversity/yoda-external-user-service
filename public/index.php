@@ -20,5 +20,5 @@ if (chdir($APP_ROOT) === FALSE) {
     );
     http_response_code(500);
 } else {
-    include('index.php');
+    require('index.php');
 }
