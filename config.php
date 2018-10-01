@@ -47,7 +47,8 @@ config('smtp_from_address',    ''); // Restrictions may apply.
 config('smtp_replyto_name',    ''); // Redirect replies to a service/helpdesk e-mail, for example.
 config('smtp_replyto_address', '');
 
-// Mail subjects.
+// Mail templates and subjects.
+config('mail_template',                     'example');
 config('mail_invitation_subject',           'Welcome to Yoda!');
 config('mail_invitation-sent_subject',      'You have invited an external user to Yoda');
 config('mail_activation-succesful_subject', 'You have successfully activated your Yoda account');

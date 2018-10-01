@@ -57,10 +57,11 @@ function render_template($text, $vars, $is_html = false) {
 }
 
 function send_mail_template($to, $subject, $template_name, $template_vars) {
-    $start_html =  file_get_contents("mail-templates/common-start.html");
-    $end_html   =  file_get_contents("mail-templates/common-end.html");
-    $body_html  = @file_get_contents("mail-templates/$template_name.html");
-    $body_plain =  file_get_contents("mail-templates/$template_name.txt");
+    $mail_template = config('mail_template');
+    $start_html =  file_get_contents("mail-templates/$mail_template/common-start.html");
+    $end_html   =  file_get_contents("mail-templates/$mail_template/common-end.html");
+    $body_html  = @file_get_contents("mail-templates/$mail_template/$template_name.html");
+    $body_plain =  file_get_contents("mail-templates/$mail_template/$template_name.txt");
 
     if ($start_html === false || $end_html === false || $body_plain === false)
         fail("Could not render mail template '$template_name'");
