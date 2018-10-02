@@ -1,0 +1,18 @@
+RewriteEngine on
+
+## Rewrite everything to index.php except for robots.txt and /static directories.
+RewriteCond $1 !^(index\.php|robots\.txt|([^/]+/)?static/)
+RewriteRule ^(.*)$ index.php/$1 [L]
+
+SetEnvIf YODA_APP_ROOT ^$ YODA_APP_ROOT=../../yoda-external-user-service
+
+## Forbid embedding this application in other websites.
+## Disallow loading resources like scripts and stylesheets from third party sources.
+Header set   Content-Security-Policy "default-src 'self'; style-src 'self'; script-src 'self' 'unsafe-eval'; img-src 'self' data:; frame-ancestors 'self'; form-action 'self'"
+Header set X-Content-Security-Policy "default-src 'self'; style-src 'self'; script-src 'self' 'unsafe-eval'; img-src 'self' data:; frame-ancestors 'self'; form-action 'self'"
+Header set              X-Webkit-CSP "default-src 'self'; style-src 'self'; script-src 'self' 'unsafe-eval'; img-src 'self' data:; frame-ancestors 'self'; form-action 'self'"
+
+Header set Access-Control-Allow-Origin  "https://editor.swagger.io"
+Header set Access-Control-Allow-Methods "POST, GET"
+Header set Access-Control-Allow-Headers "X-Yoda-External-User-Secret, Content-Type, Authorization"
+Header set Access-Control-Max-Age       60

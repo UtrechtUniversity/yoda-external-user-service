@@ -12,7 +12,7 @@ Header set   Content-Security-Policy "default-src 'self'; style-src 'self'; scri
 Header set X-Content-Security-Policy "default-src 'self'; style-src 'self'; script-src 'self' 'unsafe-eval'; img-src 'self' data:; frame-ancestors 'self'; form-action 'self'"
 Header set              X-Webkit-CSP "default-src 'self'; style-src 'self'; script-src 'self' 'unsafe-eval'; img-src 'self' data:; frame-ancestors 'self'; form-action 'self'"
 
-#Header set Access-Control-Allow-Origin  "??????"
-#Header set Access-Control-Allow-Methods "POST, GET"
-#Header set Access-Control-Allow-Headers "X-Yoda-External-User-Secret, Content-Type, Authorization"
-#Header set Access-Control-Max-Age       60
+Header set Access-Control-Allow-Origin  "https://editor.swagger.io"
+Header set Access-Control-Allow-Methods "POST, GET"
+Header set Access-Control-Allow-Headers "X-Yoda-External-User-Secret, Content-Type, Authorization"
+Header set Access-Control-Max-Age       60
