@@ -1,11 +1,11 @@
 swagger: "2.0"
 info:
   description: "The Yoda external user service"
-  version: "1.0.0"
+  version: "1.0.1"
   title: "Yoda external user service API"
   license:
     name: "GPLv3"
-host: "extuser.yoda.test"
+host: "eus.yoda.test"
 basePath: "/api"
 tags:
 - name: "user"
