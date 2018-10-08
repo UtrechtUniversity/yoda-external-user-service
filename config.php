@@ -53,6 +53,7 @@ config('mail_invitation_subject',           'Welcome to Yoda!');
 config('mail_invitation-sent_subject',      'You have invited an external user to Yoda');
 config('mail_activation-succesful_subject', 'You have successfully activated your Yoda account');
 config('mail_invitation-accepted_subject',  'An external user has activated their Yoda account');
+config('mail_reset_password_subject',       'Reset password');
 
 if (file_exists('config_local.php'))
     require('config_local.php');

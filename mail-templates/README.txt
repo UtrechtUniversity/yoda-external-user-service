@@ -32,6 +32,9 @@ depending on the template name:
     - [[CREATOR]]
 - activation-succesful
     - [[USERNAME]]
+- reset-password
+    - [[USERNAME]] (the external user name)
+    - [[HASH_URL]] (the password reset URL, including a random hash)
 
 All occurrences of these variables will be replaced with their respective values.
 The names must match exactly, including the square brackets.
