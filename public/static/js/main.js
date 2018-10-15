@@ -7,4 +7,9 @@ $(document).ready(function() {
             $('#capitals').addClass("hidden");
         }
     });
+
+    // Disable form submit button after submit.
+    $('form').submit(function() {
+        $(this).find("input[type='submit']").prop('disabled',true);
+    });
 });
