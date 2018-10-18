@@ -65,7 +65,7 @@ function api_user_add($username, $creator_user, $creator_zone) {
 
         $i = invitation_find_by_id_and_zone($u['id'], $creator_zone);
 
-        if ($i !== null) {
+        if ($i == null) {
             invitation_create(array('user_id'      => $u['id'],
                                     'inviter_time' => date("Y-m-d H:i:s", time()),
                                     'inviter_user' => $creator_user,
