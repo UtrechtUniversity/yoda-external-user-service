@@ -130,6 +130,8 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
         // User has a valid reset password URL.
         $username = $u['username'];
 
+        $passwordPattern = '/^(?=.*?[A-Z])(?=.*?[0-9)(?=.*?[a-z])(?=.*?[!@#=?<>()\/\&]).{10,32}$/';
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST'
             && isset($_POST['username'])
             && isset($_POST['password'])
@@ -147,8 +149,10 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
 
                 // Do the passwords match?
             } elseif($_POST['password'] !== $_POST['password_again']) {
-
                 $err = 'Please re-enter your password, the two provided passwords did not match.';
+
+            } elseif(preg_match($passwordPattern, $_POST['password'])!=1) {
+                $err = 'Your password is not in accordance with requirements as stated below. Please choose a different password.';
             }
 
             if ($err !== null) {
