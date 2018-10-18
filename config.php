@@ -23,6 +23,9 @@ config('db_password',   '');
 // Table that holds all external user info.
 config('db_user_table', 'users');
 
+// Table that holds all external user zones info.
+config('db_user_zones_table', 'user_zones');
+
 // The API secret that must be provided by all clients that make use of the
 // external user API.
 config('api_secret',    '');

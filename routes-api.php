@@ -59,11 +59,15 @@ function api_user_add($username, $creator_user, $creator_zone) {
 
     if ($u !== null) {
         // If the user already exists, this is not an error.
-        // It simply means we have nothing to do :-)
         //
         // This may occur if a user was added in zone A,
         // and is then added in zone B. The iRODS user is newly created, but
         // the external user already exists.
+	// Add new invitiation to the database.
+        invitation_create(array('user_id'      => $['id'],
+                                'inviter_time' => date("Y-m-d H:i:s", time()),
+                                'inviter_user' => $creator_user,
+                                'inviter_zone' => $creator_zone));
 
         echo json_encode(array('status'  => 'ok',
                                'message' => 'User already exists.'));
@@ -72,19 +76,25 @@ function api_user_add($username, $creator_user, $creator_zone) {
     }
 
     // Generate a hash and add the user to the database.
-
     $hash = random_hash(32); // 64 nibbles / characters.
 
     user_create(array('username'     => $username,
+                      'creator_time' => date("Y-m-d H:i:s", time()),
                       'creator_user' => $creator_user,
                       'creator_zone' => $creator_zone,
                       'hash'         => $hash,
                       'hash_time'    => date("Y-m-d H:i:s", time())));
 
+    // Add user invitation to the database.
+    $u = user_find_by_username($username);
+    invitation_create(array('user_id'      => $['id'],
+                            'inviter_time' => date("Y-m-d H:i:s", time()),
+                            'inviter_user' => $creator_user,
+                            'inviter_zone' => $creator_zone));
+
     $hash_url = base_url("/user/activate/$hash", true);
 
     // Send an invitation e-mail and a confirmation.
-
     send_mail_template($username, config('mail_invitation_subject'),
                        'invitation',
                        array('USERNAME' => $username,
@@ -97,7 +107,6 @@ function api_user_add($username, $creator_user, $creator_zone) {
                              'CREATOR'  => $creator_user));
 
     // Success!
-
     echo json_encode(array('status'  => 'ok',
                            'message' => 'User created.'));
 
