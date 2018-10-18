@@ -1,5 +1,4 @@
 <?php
-
 // Service user requests.
 
 if (match_path(request_path(), '/user/activate/:hash', $vars)) {
@@ -15,7 +14,6 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
 
     } else {
         // User has a valid activation URL.
-
         $username     = $u['username'];
         $creator_user = $u['creator_user'];
 
@@ -27,7 +25,6 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
 
             // Any POST request for which the above checks fail has been
             // tampered with and does not need special error reporting.
-
             $err = null;
 
             // Are all fields filled in?
@@ -39,7 +36,6 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
 
                 // Do the passwords match?
             } elseif($_POST['password'] !== $_POST['password_again']) {
-
                 $err = 'Please re-enter your password, the two provided passwords did not match.';
             }
 
@@ -147,7 +143,6 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
 
                 // Do the passwords match?
             } elseif($_POST['password'] !== $_POST['password_again']) {
-
                 $err = 'Please re-enter your password, the two provided passwords did not match.';
             }
 

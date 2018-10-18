@@ -1,5 +1,4 @@
 <?php
-
 // Service API requests.
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -52,7 +51,6 @@ function decode_api_request_body($fields = array()) {
 
 /// Create a new external user.
 function api_user_add($username, $creator_user, $creator_zone) {
-
     header('Content-Type: application/json');
 
     $u = user_find_by_username($username);
@@ -63,8 +61,8 @@ function api_user_add($username, $creator_user, $creator_zone) {
         // This may occur if a user was added in zone A,
         // and is then added in zone B. The iRODS user is newly created, but
         // the external user already exists.
-	// Add new invitiation to the database.
-        invitation_create(array('user_id'      => $['id'],
+        // Add new invitiation to the database.
+        invitation_create(array('user_id'      => $u['id'],
                                 'inviter_time' => date("Y-m-d H:i:s", time()),
                                 'inviter_user' => $creator_user,
                                 'inviter_zone' => $creator_zone));
@@ -87,7 +85,7 @@ function api_user_add($username, $creator_user, $creator_zone) {
 
     // Add user invitation to the database.
     $u = user_find_by_username($username);
-    invitation_create(array('user_id'      => $['id'],
+    invitation_create(array('user_id'      => $u['id'],
                             'inviter_time' => date("Y-m-d H:i:s", time()),
                             'inviter_user' => $creator_user,
                             'inviter_zone' => $creator_zone));
@@ -119,13 +117,11 @@ function api_user_check_auth() {
     $authed = false;
 
     // Check the credentials in the HTTP Basic auth header.
-
     if (isset($_SERVER['PHP_AUTH_USER'])) {
         $name = $_SERVER['PHP_AUTH_USER'];
         $pass = $_SERVER['PHP_AUTH_PW'];
 
         // User must exist and password hash must match.
-
         $u = user_find_by_username($name);
         if ($u !== null && password_verify($pass, $u['password']))
             $authed = true;
@@ -152,9 +148,7 @@ if (!is_api_request_authenticated()) {
 }
 
 // Perform routing.
-
 if (match_path(request_path(), '/api/user/add')) {
-
     // Fetch & verify parameters from the JSON request body.
     $data = decode_api_request_body(array('username',
                                           'creator_user',
@@ -163,12 +157,9 @@ if (match_path(request_path(), '/api/user/add')) {
     api_user_add($data['username'],
                  $data['creator_user'],
                  $data['creator_zone']);
-
 } elseif (match_path(request_path(), '/api/user/auth-check')) {
-
     // Parameters are in a Basic auth header.
     api_user_check_auth();
-
 } else {
     // Non-existent API route.
     // No need to provide any info besides the 404 status code.
