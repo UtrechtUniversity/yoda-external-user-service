@@ -69,7 +69,7 @@ function db_find($table, $pkname, $pkvalue) {
 function db_find2($table, $pkname, $pkvalue, $pkname2, $pkvalue2) {
     $q = 'select * from "' . $table . '"'
          . ' where ' . dbq_quote_field($pkname)
-         . ' = ?' and ' . dbq_quote_field($pkname2)
+         . ' = ? and ' . dbq_quote_field($pkname2)
          . ' = ?';
 
     $sth = db()->prepare($q);
