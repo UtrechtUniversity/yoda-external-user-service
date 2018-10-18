@@ -82,6 +82,7 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
         } else {
             // Username exists?
             $u = user_find_by_username($_POST['username']);
+
             if (is_null($u)) {
                 $err = 'Only external users can reset their password.';
             }
