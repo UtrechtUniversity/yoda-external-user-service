@@ -63,6 +63,25 @@ function db_find($table, $pkname, $pkvalue) {
         return $row;
 }
 
+/// Select a record in the specified table.
+/// Returns null if no record was found.
+/// $pkname can be any UNIQUE column name.
+function db_find2($table, $pkname, $pkvalue, $pkname2, $pkvalue2) {
+    $q = 'select * from "' . $table . '"'
+         . ' where ' . dbq_quote_field($pkname)
+         . ' = ?' and ' . dbq_quote_field($pkname2)
+         . ' = ?';
+
+    $sth = db()->prepare($q);
+    $sth->execute(array($pkvalue, $pkvalue2));
+
+    $row = $sth->fetch(PDO::FETCH_ASSOC);
+    if ($row === false)
+        return null;
+    else
+        return $row;
+}
+
 /// Insert a record in the specified table.
 function db_insert($table, $kvs) {
     $fields = array_keys($kvs);

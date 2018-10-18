@@ -61,11 +61,16 @@ function api_user_add($username, $creator_user, $creator_zone) {
         // This may occur if a user was added in zone A,
         // and is then added in zone B. The iRODS user is newly created, but
         // the external user already exists.
-        // Add new invitiation to the database.
-        invitation_create(array('user_id'      => $u['id'],
-                                'inviter_time' => date("Y-m-d H:i:s", time()),
-                                'inviter_user' => $creator_user,
-                                'inviter_zone' => $creator_zone));
+        // Add new invitiation to the database if not exists for zone.
+
+        $i = invitation_find_by_id_and_zone($u['id'], $creator_zone);
+
+        if ($i !== null) {
+            invitation_create(array('user_id'      => $u['id'],
+                                    'inviter_time' => date("Y-m-d H:i:s", time()),
+                                    'inviter_user' => $creator_user,
+                                    'inviter_zone' => $creator_zone));
+        }
 
         echo json_encode(array('status'  => 'ok',
                                'message' => 'User already exists.'));

@@ -23,3 +23,9 @@ function user_update($username, $kvs) {
 function invitation_create($kvs) {
     db_insert(config('db_user_zones_table'), $kvs);
 }
+
+function invitation_find_by_id_and_zone($user_id, $inviter_zone) {
+    return db_find2(config('db_user_zones_table'),
+                    'users_id', $user_id,
+		    'inviter_zone', $inviter_zone);
+}
