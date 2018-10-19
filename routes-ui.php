@@ -1,6 +1,9 @@
 <?php
 // Service user requests.
 
+$passwordPattern = '/^(?=.*?[A-Z])(?=.*?[0-9)(?=.*?[a-z])(?=.*?[!@#=?<>()\/\&]).{10,32}$/';
+
+
 if (match_path(request_path(), '/user/activate/:hash', $vars)) {
 
     $u = user_find_by_hash($vars['hash']);
@@ -29,15 +32,19 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
 
             // Are all fields filled in?
             if (strlen($_POST['username']) === 0
-             || strlen($_POST['password']) === 0
-             || strlen($_POST['password_again']) === 0) {
+                || strlen($_POST['password']) === 0
+                || strlen($_POST['password_again']) === 0
+            ) {
 
                 $err = 'Please fill in all required fields.';
 
                 // Do the passwords match?
-            } elseif($_POST['password'] !== $_POST['password_again']) {
+            } elseif ($_POST['password'] !== $_POST['password_again']) {
                 $err = 'Please re-enter your password, the two provided passwords did not match.';
+            } elseif(preg_match($passwordPattern, $_POST['password'])!=1) {
+                $err = 'Your password is not in accordance with requirements as stated below. Please choose a different password.';
             }
+
 
             if ($err !== null) {
                 // Input invalid. Report the problem to the user and allow re-entry.
@@ -82,6 +89,7 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
         } else {
             // Username exists?
             $u = user_find_by_username($_POST['username']);
+
             if (is_null($u)) {
                 $err = 'Only external users can reset their password.';
             }
@@ -144,6 +152,9 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
                 // Do the passwords match?
             } elseif($_POST['password'] !== $_POST['password_again']) {
                 $err = 'Please re-enter your password, the two provided passwords did not match.';
+
+            } elseif(preg_match($passwordPattern, $_POST['password'])!=1) {
+                $err = 'Your password is not in accordance with requirements as stated below. Please choose a different password.';
             }
 
             if ($err !== null) {
