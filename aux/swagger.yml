@@ -1,4 +1,4 @@
-swagger: "2.0"
+wagger: "2.0"
 info:
   description: "The Yoda external user service"
   version: "1.0.1"
@@ -49,6 +49,39 @@ paths:
           description: "User with that name already exists"
         415:
           description: "Invalid input MIME type"
+  /user/delete:
+    post:
+      tags:
+      - "user"
+      summary: "Delete user"
+      description: ""
+      operationId: "deleteUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User/zone object to remove user from corresponding zone"
+        required: true
+        schema:
+          $ref: "#/definitions/UserDelete"
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        400:
+          description: "Invalid request"
+        401:
+          description: "Invalid or missing user credentials"
+        403:
+          description: "Unauthorized request (API key may be missing or invalid)"
+        405:
+          description: "Invalid input"
+        415:
+          description: "Invalid input MIME type"
   /user/auth-check:
     post:
       tags:
@@ -88,6 +121,18 @@ securityDefinitions:
   basicAuth:
     type: basic
 definitions:
+  UserDelete:
+    type: "object"
+    properties:
+      username:
+        type: "string"
+        description: "Username of the new external user (must be an e-mail address)"
+      userzone:
+        type: "string"
+        description: "Zone of the group the user has to be removed from"
+    example:
+      username:     "piet@example.com"
+      userzone:     "tempZone"
   User:
     type: "object"
     properties:

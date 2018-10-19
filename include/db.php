@@ -112,4 +112,46 @@ function db_update($table, $pkname, $pkvalue, $kvs) {
     db()->prepare($q)->execute($values);
 }
 
-// }}}
+// Delete from table
+// $deleteWhat = array('user_id'=> 299,
+//  user_zone=>'Bla'
+// )
+function db_delete($table, $deleteWhatKV) {
+// examples
+    // delete from users where id=bla
+    // delete from user_zone where user_id=1 and user_zone = 'tempZone'
+
+    $sqlWhere = '';
+    foreach($deleteWhatKV as $col=>$val) {
+        $sqlWhere .= ($sqlWhere ? ' AND ' :  ' WHERE ') . $col . '=' . "'$val'"; // treat all as strings, in this situation no problem
+    }
+
+    $q = 'delete from ' . $table . $sqlWhere;
+
+    db()->prepare($q)->execute();
+}
+
+// Count entries in table given where clause
+function db_count($table, $countWhatKV) {
+    // examples
+    // count(*) from user_zone where user_id = 1
+    $sqlWhere = '';
+    foreach($countWhatKV as $col=>$val) {
+        $sqlWhere .= ($sqlWhere ? ' and ' :  ' where ') . dbq_quote_field($col) . " = '$val' ";
+    }
+
+    $q = 'select count(*) as total from ' . $table . $sqlWhere;
+
+    $sth = db()->prepare($q);
+    $sth->execute();
+
+    $row = $sth->fetch(PDO::FETCH_ASSOC);
+
+    if ($row === false) {
+        return null;
+    }
+    else {
+        return $row['total'];
+    }
+}
+
