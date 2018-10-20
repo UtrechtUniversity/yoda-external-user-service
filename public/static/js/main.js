@@ -1,5 +1,5 @@
 // Pattern for password validation
-var patt = /^(?=.*?[A-Z])(?=.*?[0-9)(?=.*?[a-z])(?=.*?[!@#=?<>()\/\&]).{10,32}$/;
+var patt = /^(?=.*?[A-Z])(?=(.*[a-z]){1,})(?=(.*[\d]){1,})(?=(.*[\W]){1,})(?!.*\s).{10,32}$/
 
 $(document).ready(function() {
     // Warn user if capitals are used in username.

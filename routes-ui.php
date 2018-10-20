@@ -3,8 +3,7 @@ require_once('common.php');
 
 // Service user requests.
 
-$passwordPattern = '/^(?=.*?[A-Z])(?=.*?[0-9)(?=.*?[a-z])(?=.*?[!@#=?<>()\/\&]).{10,32}$/';
-
+$passwordPattern = '/^(?=.*?[A-Z])(?=(.*[a-z]){1,})(?=(.*[\d]){1,})(?=(.*[\W]){1,})(?!.*\s).{10,32}$/';
 
 if (match_path(request_path(), '/user/activate/:hash', $vars)) {
 
