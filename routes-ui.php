@@ -3,7 +3,34 @@ require_once('common.php');
 
 // Service user requests.
 
-$passwordPattern = '/^(?=.*?[A-Z])(?=(.*[a-z]){1,})(?=(.*[\d]){1,})(?=(.*[\W]){1,})(?!.*\s).{10,32}$/';
+// 3 of 4 requirements must match
+function isValidPassword($password)
+{
+    $basePattern = '/^([a-zA-Z0-9!@#$%&*()=?]){10,32}$/';
+    $subPattern = array();
+    $subPattern[] = '/\d/';
+    $subPattern[] = '/[A-Z]/';
+    $subPattern[] = '/[a-z]/';
+    $subPattern[] = '/[!@#$%&*()=?]/';
+
+    $validTypeCounter = 0; //
+
+    if (preg_match($basePattern, $password) != 1) {
+        return false;
+    }
+
+    foreach($subPattern as $pattern) {
+        if (preg_match($pattern, $password) == 1) {
+            $validTypeCounter++;
+        }
+    }
+
+    if ($validTypeCounter>=3) {
+        return true;
+    }
+    return false;
+}
+
 
 if (match_path(request_path(), '/user/activate/:hash', $vars)) {
 
@@ -42,7 +69,7 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
                 // Do the passwords match?
             } elseif ($_POST['password'] !== $_POST['password_again']) {
                 $err = 'Please re-enter your password, the two provided passwords did not match.';
-            } elseif(preg_match($passwordPattern, $_POST['password'])!=1) {
+            } elseif(!isValidPassword($_POST['password'])) {
                 $err = 'Your password is not in accordance with requirements as stated below. Please choose a different password.';
             }
 
@@ -154,7 +181,7 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
             } elseif($_POST['password'] !== $_POST['password_again']) {
                 $err = 'Please re-enter your password, the two provided passwords did not match.';
 
-            } elseif(preg_match($passwordPattern, $_POST['password'])!=1) {
+            } elseif(!isValidPassword($_POST['password'])) {
                 $err = 'Your password is not in accordance with requirements as stated below. Please choose a different password.';
             }
 
@@ -187,3 +214,4 @@ if (match_path(request_path(), '/user/activate/:hash', $vars)) {
     http_response_code(404);
     render_view('404');
 }
+

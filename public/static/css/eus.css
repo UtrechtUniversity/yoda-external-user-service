@@ -61,3 +61,8 @@
 	font-size: 16px;
 	border-color: #ddd;
 }
+
+.password-check-ok {
+	color: green;
+	font-size: 30px;
+}
