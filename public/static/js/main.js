@@ -148,7 +148,8 @@ function passwordAlert(alert, submitState) {
 }
 
 function alertBox(alert) {
-    $('.alert-warning').fadeOut(30, function () {
-        $(this).html(alert);
-    }).fadeIn(30);
+    // $('.alert-warning').fadeOut(30, function () {
+    //     $(this).html(alert);
+    // }).fadeIn(30);
+    $('.alert-warning').html(alert);
 }
