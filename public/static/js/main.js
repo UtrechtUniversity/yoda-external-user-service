@@ -26,7 +26,7 @@ $(document).ready(function() {
                 passwordAlert('The entered passwords are not the same.', false);
             }
             else if(!isValidPassword(password)) {
-                passwordAlert('The passwords given do not meet the requirements as stated below.', false);
+                passwordAlert('Passwords given do not meet the requirements as stated below.', false);
             }
             else {
                 $("input[type='submit']").prop('disabled', true);
@@ -100,20 +100,20 @@ function checkPassword()
         passwordAlert('Please fill in a password', false);
     }
     else if(!isValidPassword(password)){
-        passwordAlert('Password given does not meet the requirements as stated below.', false);
+        passwordAlert('Passwords given do not meet the requirements as stated below.', false);
     }
     else {
         $('.password-check-icon-ok').removeClass('hide');
         if (passwordAgain.length==0) {
-            passwordAlert('Please confirm your password', false);
+            passwordAlert('Please confirm your password.', false);
         }
         else {
             if (passwordAgain!=password) {
-                passwordAlert('Confirmation password is not equal', false);
+                passwordAlert('Confirmation password is not equal.', false);
             }
             else {
                 $('.password-again-check-icon-ok').removeClass('hide');
-                passwordAlert('Passwords are equal and conform requirements', true);
+                passwordAlert('Passwords are equal and conform requirements.', true);
 
             }
         }
@@ -127,17 +127,23 @@ function checkPasswordMatch()
 
     $('.password-again-check-icon-ok').addClass('hide');
 
+    if(!isValidPassword(password)) {
+        passwordAlert('Passwords given do not meet the requirements as stated below.', false);
+        return;
+    }
+
     if (password.length==0) {
-        passwordAlert('Please fill in a password', false);
+        passwordAlert('Please fill in a password.', false);
     }
     else if (passwordAgain.length==0) {
-       passwordAlert('Please confirm your password', false);
+       passwordAlert('Please confirm your password.', false);
     }
     else if (password != passwordAgain) {
-        passwordAlert('The confirmation passwords is not the same.', false);
+        passwordAlert('Confirmation passwords is not equal.', false);
     }
     else {
-        passwordAlert('Passwords are equal and conform requirements', true);
+        // match is only valid if actual password is valid.
+        passwordAlert('Passwords are equal and conform requirements.', true);
         $('.password-again-check-icon-ok').removeClass('hide');
     }
 }
