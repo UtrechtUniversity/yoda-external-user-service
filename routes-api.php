@@ -27,18 +27,11 @@ function is_api_request_authenticated() {
 /// Returns the required fields in an assoc array.
 /// If the required fields do not exist, sets 400 and exits.
 function decode_api_request_body($fields = array()) {
-
-    print_r(file_get_contents('php://input'));
-
     $data = json_decode(file_get_contents('php://input'));
-
-    echo 'hier komen we wel';
 
     if (!is_object($data)) {
         http_response_code(400); exit(0);
     }
-
-    echo 'We zijn hier nu';
 
     $result = array();
 
@@ -195,8 +188,7 @@ if (match_path(request_path(), '/api/user/delete')) {
                                           'userzone')); // zone where user needs to be deleted from
 
     api_user_delete($data['username'],
-        $data['userzone']);
-
+                    $data['userzone']);
 } elseif (match_path(request_path(), '/api/user/add')) {
     // Fetch & verify parameters from the JSON request body.
     $data = decode_api_request_body(array('username',
@@ -205,11 +197,9 @@ if (match_path(request_path(), '/api/user/delete')) {
     api_user_add($data['username'],
                  $data['creator_user'],
                  $data['creator_zone']);
-
 } elseif (match_path(request_path(), '/api/user/auth-check')) {
     // Parameters are in a Basic auth header.
     api_user_check_auth();
-
 } else {
     // Non-existent API route.
     // No need to provide any info besides the 404 status code.
