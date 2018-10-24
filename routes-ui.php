@@ -1,4 +1,6 @@
 <?php
+require_once('common.php');
+
 // Service user requests.
 
 $passwordPattern = '/^(?=.*?[A-Z])(?=.*?[0-9)(?=.*?[a-z])(?=.*?[!@#=?<>()\/\&]).{10,32}$/';

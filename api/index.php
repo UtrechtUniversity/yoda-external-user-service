@@ -15,10 +15,10 @@ if (chdir($APP_ROOT) === FALSE) {
         . '</pre>'
     );
     error_log(
-          'Configuration error in the external user service\'s public/index.php: '
+          'Configuration error in the external user service\'s api/index.php: '
         . 'Could not find App directory at \'' . $APP_ROOT . '\'.'
     );
     http_response_code(500);
 } else {
-    require('routes-ui.php');
+    require('routes-api.php');
 }

@@ -1,4 +1,6 @@
 <?php
+require_once('common.php');
+
 // Service API requests.
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
