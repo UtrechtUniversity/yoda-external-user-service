@@ -1,0 +1,7 @@
+RewriteEngine on
+
+## Rewrite everything to index.php except for robots.txt and /static directories.
+RewriteCond $1 !^(index\.php|robots\.txt|([^/]+/)?static/)
+RewriteRule ^(.*)$ index.php/$1 [L]
+
+SetEnvIf YODA_APP_ROOT ^$ YODA_APP_ROOT=../../yoda-external-user-service
