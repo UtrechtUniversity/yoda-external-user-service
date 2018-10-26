@@ -1,6 +1,3 @@
-// Pattern for password validation
-var patt = /^(?=.*?[A-Z])(?=(.*[a-z]){1,})(?=(.*[\d]){1,})(?=(.*[\W]){1,})(?!.*\s).{10,32}$/
-
 $(document).ready(function() {
     // Warn user if capitals are used in username.
     $('#f-forgot-password-username').on('input',function(e){
@@ -28,7 +25,7 @@ $(document).ready(function() {
             else if (password != passwordAgain) {
                 passwordAlert('The entered passwords are not the same.', false);
             }
-            else if(!patt.test(password)){
+            else if(!isValidPassword(password)) {
                 passwordAlert('The passwords given do not meet the requirements as stated below.', false);
             }
             else {
@@ -55,19 +52,58 @@ $(document).ready(function() {
 
 });
 
-// live validation
+
+function isValidPassword(password)   // 3 of 4 must be present. If so -> password is valid
+{
+    var patt = /^([a-zA-Z0-9!@#$%&*()=?]){10,32}$/
+
+    var subpatt1 = /\d/
+    var subpatt2 = /[A-Z]/
+    var subpatt3 = /[a-z]/
+    var subpatt4 = /[!@#$%&*()=?]/
+
+    if (patt.test(password)) { // generic test.
+        var count = 0;
+
+        if (subpatt1.test(password)) {
+            count++;
+        }
+
+        if (subpatt2.test(password)) {
+            count++;
+        }
+
+        if (subpatt3.test(password)) {
+            count++;
+        }
+
+        if (subpatt4.test(password)) {
+             count++;
+        }
+
+        if (count>=3) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function checkPassword()
 {
     password        =  $('input[name="password"]').val();
     passwordAgain   =  $('input[name="password_again"]').val();
 
+    $('.password-check-icon-ok').addClass('hide');
+    $('.password-again-check-icon-ok').addClass('hide');
+
     if (password.length==0) {
         passwordAlert('Please fill in a password', false);
     }
-    else if(!patt.test(password)){
+    else if(!isValidPassword(password)){
         passwordAlert('Password given does not meet the requirements as stated below.', false);
     }
     else {
+        $('.password-check-icon-ok').removeClass('hide');
         if (passwordAgain.length==0) {
             passwordAlert('Please confirm your password', false);
         }
@@ -76,17 +112,20 @@ function checkPassword()
                 passwordAlert('Confirmation password is not equal', false);
             }
             else {
+                $('.password-again-check-icon-ok').removeClass('hide');
                 passwordAlert('Passwords are equal and conform requirements', true);
+
             }
         }
     }
 }
 
-// hier alleen checken of ze overeenkomen?? of voor edits van beide, allebei de velden testen?
 function checkPasswordMatch()
 {
     password        =  $('input[name="password"]').val();
     passwordAgain   =  $('input[name="password_again"]').val();
+
+    $('.password-again-check-icon-ok').addClass('hide');
 
     if (password.length==0) {
         passwordAlert('Please fill in a password', false);
@@ -98,12 +137,8 @@ function checkPasswordMatch()
         passwordAlert('The confirmation passwords is not the same.', false);
     }
     else {
-        if(!patt.test(password)) {
-            passwordAlert('Password is not conform requirements', false);
-        }
-        else {
-            passwordAlert('Passwords are equal and conform requirements', true);
-        }
+        passwordAlert('Passwords are equal and conform requirements', true);
+        $('.password-again-check-icon-ok').removeClass('hide');
     }
 }
 
