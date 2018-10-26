@@ -4,8 +4,8 @@ Your Yoda account has successfully been activated.
 You can now use your credentials (your e-mail address and the password you
 provided earlier) to login to any Yoda service.
 
-Please contact the helpdesk by replying to this e-mail if you have any
-questions.
+Please contact yoda support if you have any questions.
+Information on Yoda can be found at https://yoda.uu.nl
 
 Kind regards,
 
