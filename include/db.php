@@ -122,13 +122,15 @@ function db_delete($table, $deleteWhatKV) {
     // delete from user_zone where user_id=1 and user_zone = 'tempZone'
 
     $sqlWhere = '';
-    foreach($deleteWhatKV as $col=>$val) {
-        $sqlWhere .= ($sqlWhere ? ' AND ' :  ' WHERE ') . $col . '=' . "'$val'"; // treat all as strings, in this situation no problem
+    $values = array();
+    foreach ($deleteWhatKV as $col => $value) {
+        $values[] = $value;
+        $sqlWhere .= ($sqlWhere ? ' AND ' :  ' WHERE ') .  dbq_quote_field($col) . ' = ?';
     }
 
     $q = 'delete from ' . $table . $sqlWhere;
 
-    db()->prepare($q)->execute();
+    db()->prepare($q)->execute($values);
 }
 
 // Count entries in table given where clause
@@ -136,14 +138,16 @@ function db_count($table, $countWhatKV) {
     // examples
     // count(*) from user_zone where user_id = 1
     $sqlWhere = '';
-    foreach($countWhatKV as $col=>$val) {
-        $sqlWhere .= ($sqlWhere ? ' and ' :  ' where ') . dbq_quote_field($col) . " = '$val' ";
+    $values = array();
+    foreach ($countWhatKV as $col => $value) {
+        $values[] = $value;
+        $sqlWhere .= ($sqlWhere ? ' AND ' :  ' WHERE ') . dbq_quote_field($col) . ' = ?';
     }
 
     $q = 'select count(*) as total from ' . $table . $sqlWhere;
 
     $sth = db()->prepare($q);
-    $sth->execute();
+    $sth->execute($values);
 
     $row = $sth->fetch(PDO::FETCH_ASSOC);
 
