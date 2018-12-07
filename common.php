@@ -29,7 +29,7 @@ function base_url($path='/', $absolute = false) {
         // NB: Does not take port into account.
         return $_SERVER['REQUEST_SCHEME']
              . '://'
-             . config('eus_fqdn')
+             . config('yoda_eus_fqdn')
              . $path;
     } else {
         return $path;
