@@ -13,6 +13,8 @@ function config($key, $val = null) {
     return $config_[$key];
 }
 
+config('yoda_eus_fqdn', 'localhost');
+
 // Database connection info.
 config('db_host',       'localhost');
 config('db_port',       5432);
