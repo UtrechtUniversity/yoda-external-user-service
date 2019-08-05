@@ -3,29 +3,43 @@ require_once('common.php');
 
 // Service user requests.
 
-// 3 of 4 requirements must match
 function isValidPassword($password)
 {
-    $basePattern = '/^([a-zA-Z0-9!@#$%&*()=?]){10,32}$/';
+    // - It must be between 10 and 32 characters in length
+    // - It must not contain diacritics such as é, ö, and ç
+    // - It must comply with at least 3 of the following rules:
+    //   - At least 1 capital letter A-Z
+    //   - At least 1 lowercase letter a-z
+    //   - At least 1 number 0-9
+    //   - At least 1 special character, such as: !@#$%&*()=?_ 
+
+    // Match the printable ASCII range (' ' to '~'), excludes control
+    // characters and unicode characters outside of ASCII.
+    $basePattern = '/^[\x20-\x7e]{10,32}$/';
+
+    // [:print:] is avoided ^ since it may match non-ASCII characters, which
+    // are not allowed according to UU policy.
+
+    // 3 of 4 of these requirements must match
     $subPattern = array();
-    $subPattern[] = '/\d/';
     $subPattern[] = '/[A-Z]/';
     $subPattern[] = '/[a-z]/';
-    $subPattern[] = '/[!@#$%&*()=?]/';
+    $subPattern[] = '/[0-9]/';
+    $subPattern[] = '/[^A-Za-z0-9]/';
 
     $validTypeCounter = 0; //
 
-    if (preg_match($basePattern, $password) != 1) {
+    if (preg_match($basePattern, $password) !== 1) {
         return false;
     }
 
     foreach($subPattern as $pattern) {
-        if (preg_match($pattern, $password) == 1) {
+        if (preg_match($pattern, $password) === 1) {
             $validTypeCounter++;
         }
     }
 
-    if ($validTypeCounter>=3) {
+    if ($validTypeCounter >= 3) {
         return true;
     }
     return false;

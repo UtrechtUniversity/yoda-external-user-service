@@ -16,17 +16,17 @@ $(document).ready(function() {
         // 1) activation
         // 2) password reset
         if ($(this).attr('validationProcess')=='YodaPasswordValidation') {
-            password        =  $('input[name="password"]').val();
-            passwordAgain   =  $('input[name="password_again"]').val();
+            var password      = $('input[name="password"]'      ).val();
+            var passwordAgain = $('input[name="password_again"]').val();
 
-            if (password.length==0) {
+            if (password.length == 0) {
                 passwordAlert('Please fill in a password', false);
             }
-            else if (password != passwordAgain) {
+            else if (password !== passwordAgain) {
                 passwordAlert('The entered passwords are not the same.', false);
             }
             else if(!isValidPassword(password)) {
-                passwordAlert('Passwords given do not meet the requirements as stated below.', false);
+                passwordAlert('The password does not meet the requirements stated below.', false);
             }
             else {
                 $("input[type='submit']").prop('disabled', true);
@@ -47,104 +47,80 @@ $(document).ready(function() {
     });
 
     // password checking specific
-    $('input[name="password"]').keyup(checkPassword);
-    $('input[name="password_again"]').keyup(checkPasswordMatch);
-
+    $('input[name="password"]'      ).keyup(checkPasswords);
+    $('input[name="password_again"]').keyup(checkPasswords);
 });
 
 
-function isValidPassword(password)   // 3 of 4 must be present. If so -> password is valid
-{
-    var patt = /^([a-zA-Z0-9!@#$%&*()=?]){10,32}$/
+function isValidPassword(password) {
 
-    var subpatt1 = /\d/
-    var subpatt2 = /[A-Z]/
-    var subpatt3 = /[a-z]/
-    var subpatt4 = /[!@#$%&*()=?]/
+    // - It must be between 10 and 32 characters in length
+    // - It must not contain diacritics such as é, ö, and ç
+    // - It must comply with at least 3 of the following rules:
+    //   - At least 1 capital letter A-Z
+    //   - At least 1 lowercase letter a-z
+    //   - At least 1 number 0-9
+    //   - At least 1 special character, such as: !@#$%&*()=?_ 
+    //
+    // First check for the right length and allowed characters.
+    //
+    // JS has no [:ascii:] or [:print:], so we match the printable range
+    // manually (consult an ASCII table).
 
-    if (patt.test(password)) { // generic test.
-        var count = 0;
+    if (!/^[\x20-\x7e]{10,32}$/.test(password))
+        return false;
 
-        if (subpatt1.test(password)) {
-            count++;
-        }
+    // Password consists of only allowed characters and is of the right length.
 
-        if (subpatt2.test(password)) {
-            count++;
-        }
+    // At least 3 out of 4 optional patterns must match.
+    var optionalPatterns = [
+        /[A-Z]/,
+        /[a-z]/,
+        /[0-9]/,
+        /[^A-Za-z0-9]/, // will match special symbols (!@#$, spaces, etc.)
+    ];
 
-        if (subpatt3.test(password)) {
-            count++;
-        }
+    var matches = 0;
 
-        if (subpatt4.test(password)) {
-             count++;
-        }
+    $.each(optionalPatterns, function (i, pattern) {
+        if (pattern.test(password))
+            matches++;
+    });
 
-        if (count>=3) {
-            return true;
-        }
-    }
-    return false;
+    return matches >= 3;
 }
 
-function checkPassword()
-{
-    password        =  $('input[name="password"]').val();
-    passwordAgain   =  $('input[name="password_again"]').val();
+function checkPasswords() {
+    var password      =  $('input[name="password"]'      ).val();
+    var passwordAgain =  $('input[name="password_again"]').val();
 
-    $('.password-check-icon-ok').addClass('hide');
+    $('.password-check-icon-ok'      ).addClass('hide');
     $('.password-again-check-icon-ok').addClass('hide');
 
-    if (password.length==0) {
+    // Check first password.
+
+    if (password.length == 0) {
         passwordAlert('Please fill in a password', false);
-    }
-    else if(!isValidPassword(password)){
-        passwordAlert('Passwords given do not meet the requirements as stated below.', false);
-    }
-    else {
-        $('.password-check-icon-ok').removeClass('hide');
-        if (passwordAgain.length==0) {
-            passwordAlert('Please confirm your password.', false);
-        }
-        else {
-            if (passwordAgain!=password) {
-                passwordAlert('Confirmation password is not equal.', false);
-            }
-            else {
-                $('.password-again-check-icon-ok').removeClass('hide');
-                passwordAlert('Passwords are equal and conform requirements.', true);
+        return;
 
-            }
-        }
-    }
-}
-
-function checkPasswordMatch()
-{
-    password        =  $('input[name="password"]').val();
-    passwordAgain   =  $('input[name="password_again"]').val();
-
-    $('.password-again-check-icon-ok').addClass('hide');
-
-    if(!isValidPassword(password)) {
-        passwordAlert('Passwords given do not meet the requirements as stated below.', false);
+    } else if (!isValidPassword(password)) {
+        passwordAlert('The password does not meet the requirements stated below.', false);
         return;
     }
 
-    if (password.length==0) {
-        passwordAlert('Please fill in a password.', false);
-    }
-    else if (passwordAgain.length==0) {
-       passwordAlert('Please confirm your password.', false);
-    }
-    else if (password != passwordAgain) {
-        passwordAlert('Confirmation passwords is not equal.', false);
-    }
-    else {
-        // match is only valid if actual password is valid.
-        passwordAlert('Passwords are equal and conform requirements.', true);
+    // First password is OK. Check confirmation password.
+
+    $('.password-check-icon-ok').removeClass('hide');
+
+    if (passwordAgain.length == 0) {
+        passwordAlert('Please confirm your password.', false);
+
+    } else if (passwordAgain !== password) {
+        passwordAlert('Confirmation password differs from original.', false);
+
+    } else {
         $('.password-again-check-icon-ok').removeClass('hide');
+        passwordAlert('Passwords are equal and satisfy the requirements.', true);
     }
 }
 
@@ -154,8 +130,5 @@ function passwordAlert(alert, submitState) {
 }
 
 function alertBox(alert) {
-    // $('.alert-warning').fadeOut(30, function () {
-    //     $(this).html(alert);
-    // }).fadeIn(30);
     $('.alert-warning').html(alert);
 }
