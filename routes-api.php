@@ -166,7 +166,7 @@ function api_user_check_auth() {
         header('Content-Type: text/plain');
         echo 'Authenticated';
     } else {
-        header('WWW-Authenticate: Basic realm="' + config('api_auth_check_realm') + '"');
+        header('WWW-Authenticate: Basic realm="' . config('api_auth_check_realm') . '"');
         http_response_code(401);
     }
 }
