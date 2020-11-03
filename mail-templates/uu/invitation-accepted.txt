@@ -3,7 +3,7 @@ Hello [[CREATOR]],
 [[USERNAME]], whom you've invited to Yoda, has activated their account.
 
 Please contact Yoda support if you have any questions.
-Information on Yoda can be found at https://yoda.uu.nl
+Information on Yoda can be found at https://www.uu.nl/yoda
 
 Kind regards,
 
