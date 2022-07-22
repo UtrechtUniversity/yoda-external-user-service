@@ -40,9 +40,11 @@ config('smtp_host',            '');
 config('smtp_port',           587);
 config('smtp_user',            '');
 config('smtp_password',        '');
-config('smtp_security',     'tls'); // Either 'tls' or 'ssl'.
+config('smtp_auth',          true); // true or false
+config('smtp_security',     'tls'); // 'tls', 'ssl', or false
                                     // Choose 'tls' when the port is 587,
                                     // and 'ssl' when the port is 465.
+                                    // false for plain SMTP (for use with local caching MTA)
 
 // General e-mail customization.
 config('smtp_from_name',       'Yoda External User Service');
