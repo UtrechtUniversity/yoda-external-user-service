@@ -9,7 +9,7 @@ function send_mail($to, $subject, $body_plain, $body_html = null) {
 
     $mail->isSMTP();
     $mail->Host       = config('smtp_host');
-    $mail->SMTPAuth   = true;
+    $mail->SMTPAuth   = config('smtp_auth');
     $mail->Username   = config('smtp_user');
     $mail->Password   = config('smtp_password');
     $mail->SMTPSecure = config('smtp_security');
