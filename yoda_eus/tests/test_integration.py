@@ -185,3 +185,70 @@ class TestMain:
         with test_client as c:
             response = c.post('/api/user/auth-check', headers=auth_headers)
             assert response.status_code == 401
+
+    def test_reset_password_no_hash(self, test_client):
+        with test_client as c:
+            response1 = c.get('/user/reset-password')
+            assert response1.status_code == 404
+            response2 = c.get('/user/reset-password/')
+            assert response2.status_code == 404
+
+    def test_reset_password_wrong_hash(self, test_client):
+        with test_client as c:
+            response = c.get('/user/reset-password/wronghash')
+            assert response.status_code == 403
+
+    def test_reset_password_wrong_form_input(self, test_client):
+        reset_password_url = '/user/reset-password/resethash'
+        mismatched_passwords_params = {"f-reset-password-username": "unactivatedusername",
+                                       "f-reset-password-password": "Test1234567!!!",
+                                       "f-reset-password-password-repeat": "Test7654321!!!"}
+        toosimple_password_params = {"f-reset-password-username": "unactivatedusername",
+                                     "f-reset-password-password": "Test",
+                                     "f-reset-password-password-repeat": "Test"}
+        multiple_problems_params = {"f-reset-password-username": "unactivatedusername",
+                                    "f-reset-password-password": "Test",
+                                    "f-reset-password-password-repeat": "Test1234567!!!"}
+        missing_field_params = {"f-reset-password-username": "unactivatedusername",
+                                "f-reset-password-password": "Test1234567!!!"}
+
+        with test_client as c:
+            response1 = c.post(reset_password_url, json=mismatched_passwords_params)
+            assert response1.status_code == 422
+            response2 = c.post(reset_password_url, json=toosimple_password_params)
+            assert response2.status_code == 422
+            response3 = c.post(reset_password_url, json=multiple_problems_params)
+            assert response3.status_code == 422
+            response4 = c.post(reset_password_url, json=missing_field_params)
+            assert response4.status_code == 422
+
+    def test_reset_password_and_check_auth(self, test_client):
+        old_password = "Test123456!!!"
+        new_password = "Test654321!!!"
+        old_credentials = "activateduser:" + old_password
+        new_credentials = "activateduser:" + new_password
+        old_credentials_base64 = base64.b64encode(old_credentials.encode('utf-8')).decode('utf-8')
+        new_credentials_base64 = base64.b64encode(new_credentials.encode('utf-8')).decode('utf-8')
+        old_auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+                            'Authorization': 'Basic ' + old_credentials_base64}
+        new_auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+                            'Authorization': 'Basic ' + new_credentials_base64}
+        reset_password_url = '/user/reset-password/resethash'
+        reset_params = {"f-reset-password-username": "activatedusername",
+                        "f-reset-password-password": new_password,
+                        "f-reset-password-password-repeat": new_password}
+
+        with test_client as c:
+            # Check that old password is valid, but new one not yet.
+            response1 = c.post('/api/user/auth-check', headers=old_auth_headers)
+            assert response1.status_code == 200
+            response2 = c.post('/api/user/auth-check', headers=new_auth_headers)
+            assert response2.status_code == 401
+            # Check password reset returns success code
+            response3 = c.post(reset_password_url, json=reset_params)
+            assert response3.status_code == 200
+            # Check that old password is no longer valid, but new one is
+            response4 = c.post('/api/user/auth-check', headers=old_auth_headers)
+            assert response4.status_code == 401
+            response5 = c.post('/api/user/auth-check', headers=new_auth_headers)
+            assert response5.status_code == 200

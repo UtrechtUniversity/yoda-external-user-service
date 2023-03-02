@@ -115,7 +115,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
                                   creator_time=now,
                                   creator_user="creator",
                                   creator_zone="testZone",
-                                  hash="",
+                                  hash="resethash",
                                   hash_time=now,
                                   password=hashed_password)
             db.session.add(unactivated_user)
@@ -378,6 +378,64 @@ def create_app(config_filename="flask.cfg") -> Flask:
 
         # Confirm activation to user
         return render_template("activation-successful.html", **params), 200
+
+    @app.route("/user/reset-password/<hash>", methods=['GET', 'POST'])
+    def process_reset_password_form(hash: str) -> Response:
+
+        # Sanity checks secret hash
+        if hash is None or hash == "":
+            # Failsafe
+            params = {"reset_error_message": "Password reset link is invalid"}
+            return render_template('reset-password-error.html'), 403
+        else:
+            params = {"secret_hash": hash}
+
+        # Validate secret hash and handle errors
+        users = User.query.filter_by(hash=hash).all()
+
+        if len(users) > 1:
+            # Failsafe - it should not be possible that two users have
+            # the same hash.
+            params = {"reset_error_message": "Internal error."}
+            return render_template('reset-password-error.html', **params), 500
+        elif len(users) == 0:
+            params = {"reset_error_message": "Password reset link is invalid."}
+            return render_template('reset-password-error.html'), 403
+
+        user = users[0]
+        params["username"] = user.username
+
+        # If form wasn't submitted, show it
+        if request.method == "GET":
+            return render_template("reset-password.html", **params)
+
+        # Input validation of form data
+        form_inputs = request.get_json(force=True)
+
+        for field in ["f-reset-password-username", "f-reset-password-password", "f-reset-password-password-repeat"]:
+            if field not in form_inputs or form_inputs[field] == "":
+                params["errors"] = ['Please fill in all required fields.']
+                return render_template("reset-password.html", **params), 422
+
+        if form_inputs["f-reset-password-password"] != form_inputs["f-reset-password-password-repeat"]:
+            params["errors"] = ["The passwords do not match"]
+            return render_template("reset-password.html", **params), 422
+
+        password_complexity_errors = check_password_complexity(form_inputs["f-reset-password-password"])
+        if len(password_complexity_errors) > 0:
+            params["errors"] = password_complexity_errors
+            return render_template("reset-password.html", **params), 422
+
+        # Reset password account
+        salt = bcrypt.gensalt()
+        password = form_inputs["f-reset-password-password"]
+        user.hash = None
+        user.hashtime = None
+        user.password = bcrypt.hashpw(password.encode('utf8'), salt)
+        db.session.commit()
+
+        # Confirm activation to user
+        return render_template("reset-password-successful.html", **params), 200
 
     @ app.errorhandler(403)
     def access_forbidden(e: Exception) -> Response:
