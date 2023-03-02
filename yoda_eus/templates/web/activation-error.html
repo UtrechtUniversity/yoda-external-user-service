@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ super() }} &dash; Yoda account activation{% endblock title %}
+
+{% block style %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}">
+{% endblock style %}
+
+{% block content %}
+<div class="panel-body">
+    <p> {{ activation_error_message }}  </p>
+</div>
+
+{% endblock content %}

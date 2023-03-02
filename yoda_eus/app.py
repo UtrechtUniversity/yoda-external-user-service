@@ -16,6 +16,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from jinja2 import ChoiceLoader, FileSystemLoader
 from yoda_eus.mail import send_email_template
+from yoda_eus.password_complexity import check_password_complexity
 
 
 db = SQLAlchemy()
@@ -99,6 +100,34 @@ def create_app(config_filename="flask.cfg") -> Flask:
     # Initialize sessions
     Session(app)
 
+    # Load test data if required for integration tests
+    if app.config.get("LOAD_TEST_DATA", "").lower() != "false":
+        with app.app_context():
+            now = datetime.now()
+            hashed_password = bcrypt.hashpw("Test123456!!!".encode("utf-8"), bcrypt.gensalt())
+            unactivated_user = User(username="unactivateduser",
+                                    creator_time=now,
+                                    creator_user="creator",
+                                    creator_zone="testZone",
+                                    hash="goodhash",
+                                    hash_time=now)
+            activated_user = User(username="activateduser",
+                                  creator_time=now,
+                                  creator_user="creator",
+                                  creator_zone="testZone",
+                                  hash="",
+                                  hash_time=now,
+                                  password=hashed_password)
+            db.session.add(unactivated_user)
+            db.session.add(activated_user)
+            db.session.commit()
+            for user in [activated_user, unactivated_user]:
+                new_user_zone = UserZone(user_id=user.id,
+                                         inviter_time=now,
+                                         inviter_user="creator",
+                                         inviter_zone="testZone")
+                db.session.add(new_user_zone)
+
     @app.route('/')
     @csrf_exempt
     def index() -> Response:
@@ -117,7 +146,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
             return response
 
         user = User.query.filter_by(username=username).first()
-        if user is None or user.password == "" or not bcrypt.checkpw(password, user.password):
+        if user is None or user.password == "" or not bcrypt.checkpw(password.encode("utf-8"), user.password):
             response_content = {"status": "error", "message": "Incorrect credentials."}
             response = make_response(jsonify(response_content), 401)
             response.headers["WWW-Authenticate"] = "Basic realm = \"yoda-extuser\""
@@ -241,7 +270,6 @@ def create_app(config_filename="flask.cfg") -> Flask:
 
         # Check form input and handle errors
         if len(username) == 0:
-            print("No name")
             errors = {"errors": ["Please enter your user name (email address)"]}
             return render_template('forgot-password.html', **errors)
 
@@ -249,7 +277,6 @@ def create_app(config_filename="flask.cfg") -> Flask:
 
         if user is None:
             errors = {"errors": ["User name not found. Only external users can reset their password."]}
-            print("Not found.")
             return render_template("forgot-password.html", ** errors), 404
 
         # Generate and update user hash
@@ -271,6 +298,86 @@ def create_app(config_filename="flask.cfg") -> Flask:
                                 **reset_data)
 
         return render_template("forgot-password-successful.html"), 200
+
+    @app.route("/user/activate/<hash>", methods=['GET', 'POST'])
+    def process_activate_account_form(hash: str) -> Response:
+
+        # Sanity checks secret hash
+        if hash is None or hash == "":
+            # Failsafe
+            params = {"activation_error_message": "Activation link is invalid"}
+            return render_template('activation-error.html'), 403
+        else:
+            params = {"secret_hash": hash}
+
+        # Validate secret hash and handle errors
+        users = User.query.filter_by(hash=hash).all()
+
+        if len(users) > 1:
+            # Failsafe - it should not be possible that two users have
+            # the same hash.
+            params = {"activation_error_message": "Internal error."}
+            return render_template('activation-error.html', **params), 500
+        elif len(users) == 0:
+            params = {"activation_error_message": "Activation link is invalid."}
+            return render_template('activation-error.html'), 403
+        elif users[0].password != "" and users[0].password is not None:
+            params = {"activation_error_message": "Sorry, your activation link is no longer valid."}
+            return render_template('activation-error.html'), 403
+
+        user = users[0]
+        params["username"] = user.username
+
+        # If form wasn't submitted, show it
+        if request.method == "GET":
+            return render_template("activate.html", **params)
+
+        # Input validation of form data
+        form_inputs = request.get_json(force=True)
+
+        for field in ["f-activation-username", "f-activation-password", "f-activation-password-repeat"]:
+            if field not in form_inputs or form_inputs[field] == "":
+                params["errors"] = ['Please fill in all required fields.']
+                return render_template("activate.html", **params), 422
+
+        if form_inputs["f-activation-password"] != form_inputs["f-activation-password-repeat"]:
+            params["errors"] = ["The passwords do not match"]
+            return render_template("activate.html", **params), 422
+
+        password_complexity_errors = check_password_complexity(form_inputs["f-activation-password"])
+        if len(password_complexity_errors) > 0:
+            params["errors"] = password_complexity_errors
+            return render_template("activate.html", **params), 422
+
+        if "cb-activation-tou" not in form_inputs:
+            params["errors"] = ["Please check the box for acceptance of the terms of use."]
+            return render_template("activate.html", **params), 422
+
+        # Activate account
+        salt = bcrypt.gensalt()
+        password = form_inputs["f-activation-password"]
+        user.hash = None
+        user.hashtime = None
+        user.password = bcrypt.hashpw(password.encode('utf8'), salt)
+        db.session.commit()
+
+        # Send confirmation emails
+        if app.config.get("MAIL_ENABLED").lower() != "false":
+            activation_data = {'USERNAME': user.username}
+            send_email_template(app,
+                                user.username,
+                                'You have successfully activated your Yoda account',
+                                "activation-successful",
+                                **activation_data)
+            activation_data["CREATOR"] = user.creator_name
+            send_email_template(app,
+                                user.creator_name,
+                                'An external user has activated their Yoda account',
+                                "invitation_accepted",
+                                **activation_data)
+
+        # Confirm activation to user
+        return render_template("activation-successful.html", **params), 200
 
     @ app.errorhandler(403)
     def access_forbidden(e: Exception) -> Response:

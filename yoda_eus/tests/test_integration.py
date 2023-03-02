@@ -1,3 +1,5 @@
+import base64
+
 import pytest
 from yoda_eus.app import create_app
 
@@ -82,3 +84,95 @@ class TestMain:
             assert response3.status_code == 204
             response4 = c.post('/api/user/delete', json=rm2_params, headers=auth_headers)
             assert response4.status_code == 204
+
+    def test_forgot_password_show_form(self, test_client):
+        with test_client as c:
+            response = c.get('/user/forgot-password')
+            assert response.status_code == 200
+
+    def test_forgot_password_nonexistent(self, test_client):
+        with test_client as c:
+            response = c.post('/user/forgot-password', json={"f-forgot-password-username": "doesnotexist"})
+            assert response.status_code == 404
+
+    def test_forgot_password_existing(self, test_client):
+        auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret'}
+        username = "testforgotuser"
+        creator_user = "technicaladmin"
+        creator_zone = "testZone"
+        add_params = {"username": username, "creator_user": creator_user, "creator_zone": creator_zone}
+
+        with test_client as c:
+            response1 = c.post('/api/user/add', json=add_params, headers=auth_headers)
+            assert response1.status_code == 201
+            response2 = c.post('/user/forgot-password', json={"f-forgot-password-username": username})
+            assert response2.status_code == 200
+
+    def test_activate_no_hash(self, test_client):
+        with test_client as c:
+            response1 = c.get('/user/activate')
+            assert response1.status_code == 404
+            response2 = c.get('/user/activate/')
+            assert response2.status_code == 404
+
+    def test_activate_wrong_hash(self, test_client):
+        with test_client as c:
+            response = c.get('/user/activate/wronghash')
+            assert response.status_code == 403
+
+    def test_activate_wrong_form_input(self, test_client):
+        activate_url = '/user/activate/goodhash'
+        mismatched_passwords_params = {"f-activation-username": "unactivatedusername",
+                                       "f-activation-password": "Test1234567!!!",
+                                       "f-activation-password-repeat": "Test7654321!!!",
+                                       "cb-activation-tou": ""}
+        toosimple_password_params = {"f-activation-username": "unactivatedusername",
+                                     "f-activation-password": "Test",
+                                     "f-activation-password-repeat": "Test",
+                                     "cb-activation-tou": ""}
+        tou_not_accepted_params = {"f-activation-username": "unactivatedusername",
+                                   "f-activation-password": "Test1234567!!!",
+                                   "f-activation-password-repeat": "Test1234567!!!"}
+        multiple_problems_params = {"f-activation-username": "unactivatedusername",
+                                    "f-activation-password": "Test",
+                                    "f-activation-password-repeat": "Test1234567!!!"}
+        missing_field_params = {"f-activation-username": "unactivatedusername",
+                                "f-activation-password": "Test1234567!!!",
+                                "cb-activation-tou": ""}
+        with test_client as c:
+            response1 = c.post(activate_url, json=mismatched_passwords_params)
+            assert response1.status_code == 422
+            response2 = c.post(activate_url, json=toosimple_password_params)
+            assert response2.status_code == 422
+            response3 = c.post(activate_url, json=tou_not_accepted_params)
+            assert response3.status_code == 422
+            response4 = c.post(activate_url, json=multiple_problems_params)
+            assert response4.status_code == 422
+            response5 = c.post(activate_url, json=missing_field_params)
+            assert response5.status_code == 422
+
+    def test_activate_and_check_auth(self, test_client):
+        username = "unactivateduser"
+        password = "Test1234567!!!"
+        good_credentials = username + ":" + password
+        bad_credentials = username + ":wrongpassword"
+        good_credentials_base64 = base64.b64encode(good_credentials.encode('utf-8')).decode('utf-8')
+        bad_credentials_base64 = base64.b64encode(bad_credentials.encode('utf-8')).decode('utf-8')
+        auth_headers_ok = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+                           'Authorization': 'Basic ' + good_credentials_base64}
+        auth_headers_wrong_password = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+                                       'Authorization': 'Basic ' + bad_credentials_base64}
+
+        activate_url = '/user/activate/goodhash'
+        password = "Test1234567!!!"
+        good_params = {"f-activation-username": username,
+                       "f-activation-password": password,
+                       "f-activation-password-repeat": password,
+                       "cb-activation-tou": ""}
+        with test_client as c:
+            response1 = c.post(activate_url, json=good_params)
+            assert response1.status_code == 200
+            response2 = c.post('/api/user/auth-check', headers=auth_headers_ok)
+            assert response2.status_code == 200
+            response3 = c.post('/api/user/auth-check', headers=auth_headers_wrong_password)
+            assert response3.status_code == 401

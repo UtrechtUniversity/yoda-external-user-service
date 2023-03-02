@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ super() }} &dash; Yoda account activation{% endblock title %}
+
+{% block style %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}">
+{% endblock style %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-md-offset-2 col-md-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Yoda account activation</h3>
+            </div>
+            <div class="panel-body">
+               <form method="POST" class="form-horizontal" validationProcess="YodaPasswordValidation">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="secret_hash" value="{{ secret_hash }}">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="f-activation-username">Terms of use</label>
+                        <div class="col-sm-9">
+                            Terms of use:
+                            <br />
+                            By accessing and using Yoda, you agree to be bound by the
+                            Yoda terms of use as defined by Utrecht University. These terms are
+                            listed at <a href="https://www.uu.nl/en/research/yoda/what-is-yoda/terms-of-use">https://www.uu.nl/en/research/yoda/what-is-yoda/terms-of-use</a>
+                            <br />
+                            <div class="checkbox">
+                                <label><input type="checkbox" value="" id="cb-activation-tou"><strong>Please accept terms of use</strong></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="f-activation-username">Username</label>
+                        <div class="col-sm-8">
+                            <input name="username" id="f-activation-username" class="form-control" type="text" value="<?php echo escape_html($data['username']) ?>" readonly required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="f-activation-password">Password</label>
+                        <div class="col-sm-8">
+                            <input name="password" id="f-activation-password" class="form-control" type="password" required />
+                        </div>
+                        <div class="col-sm-1">
+                            <i class="glyphicon glyphicon-ok password-check-ok password-check-icon-ok hide"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="f-activation-password-again">Password (confirm)</label>
+                        <div class="col-sm-8">
+                            <input name="password_again" id="f-activation-password-again" class="form-control" type="password" required />
+                        </div>
+                        <div class="col-sm-1">
+                            <i class="glyphicon glyphicon-ok password-check-ok password-again-check-icon-ok hide"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-9">
+                            <input id="f-activation-submit" class="btn btn-primary" type="submit" value="Activate" />
+                        </div>
+                    </div>
+                </form>
+
+                <div class="alert alert-warning">Please enter a password</div>
+
+                {% include "password-requirements.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
