@@ -76,8 +76,15 @@ def create_app(config_filename="flask.cfg") -> Flask:
         db.session.commit()
 
     # Add CSRF protection
-    csrf = CSRFProtect()
-    csrf.init_app(app)
+    if app.config.get("CSRF_TOKENS_ENABLED").lower() != "false":
+        csrf = CSRFProtect()
+        csrf.init_app(app)
+
+    def csrf_exempt(f):
+        if app.config.get("CSRF_TOKENS_ENABLED").lower() != "false":
+            return csrf.exempt(f)
+        else:
+            return f
 
     # Add theme loader.
     theme = app.config.get('YODA_THEME', "uu")
@@ -93,12 +100,12 @@ def create_app(config_filename="flask.cfg") -> Flask:
     Session(app)
 
     @app.route('/')
-    @csrf.exempt
+    @csrf_exempt
     def index() -> Response:
         return render_template('index.html')
 
     @app.route('/api/user/auth-check', methods=['POST'])
-    @csrf.exempt
+    @csrf_exempt
     def auth_check() -> Response:
         try:
             username = request.authorization.username
@@ -120,7 +127,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
             return response
 
     @app.route('/api/user/delete', methods=['POST'])
-    @csrf.exempt
+    @csrf_exempt
     def delete_user() -> Response:
         content = request.json
 
@@ -149,7 +156,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
         return jsonify(response), 204
 
     @app.route("/api/user/add", methods=['POST'])
-    @csrf.exempt
+    @csrf_exempt
     def add_user() -> Response:
         content = request.json
         now = datetime.now()
