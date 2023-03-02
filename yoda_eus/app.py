@@ -172,7 +172,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
         if user is None:
 
             # Create new account
-            secret_hash = secrets.token_hex(64)
+            secret_hash = get_random_hash()
             new_user = User(username=content["username"],
                             creator_time=now,
                             creator_user=content["creator_user"],
@@ -293,6 +293,10 @@ def create_app(config_filename="flask.cfg") -> Flask:
             values['q'] = app.config.get('YODA_EUS_COMMIT')
 
     return app
+
+
+def get_random_hash():
+    return secrets.token_hex(64)
 
 
 if __name__ == "__main__":
