@@ -190,6 +190,8 @@ def create_app(config_filename="flask.cfg") -> Flask:
                                      inviter_zone=content["creator_zone"])
             db.session.add(new_user_zone)
 
+            db.session.commit()
+
             if app.config.get("MAIL_ENABLED").lower() != "false":
                 # Send invitation
                 hash_url = "https://{}/user/activate/{}".format(app.config.get("YODA_EUS_FQDN"),
