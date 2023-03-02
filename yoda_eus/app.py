@@ -231,6 +231,47 @@ def create_app(config_filename="flask.cfg") -> Flask:
             response = {"status": "ok", "message": "User already exists."}
             return jsonify(response), 200
 
+    @app.route("/user/forgot-password", methods=['GET'])
+    def show_forgot_password_form() -> Response:
+        return render_template('forgot-password.html'), 200
+
+    @app.route("/user/forgot-password", methods=['POST'])
+    def process_forgot_password() -> Response:
+        username = request.get_json(force=True).get("f-forgot-password-username", "")
+
+        # Check form input and handle errors
+        if len(username) == 0:
+            print("No name")
+            errors = {"errors": ["Please enter your user name (email address)"]}
+            return render_template('forgot-password.html', **errors)
+
+        user = User.query.filter_by(username=username).first()
+
+        if user is None:
+            errors = {"errors": ["User name not found. Only external users can reset their password."]}
+            print("Not found.")
+            return render_template("forgot-password.html", ** errors), 404
+
+        # Generate and update user hash
+        secret_hash = get_random_hash()
+        user.hash = secret_hash
+        user.hash_time = datetime.now()
+        db.session.commit()
+
+        # Send password reset email
+        if app.config.get("MAIL_ENABLED").lower() != "false":
+            hash_url = "https://{}/user/reset-password/{}".format(app.config.get("YODA_EUS_FQDN"),
+                                                                  secret_hash)
+            reset_data = {'USERNAME': user.username,
+                          'HASH_URL': hash_url}
+            send_email_template(app,
+                                user.username,
+                                'Yoda password reset',
+                                "reset-password",
+                                **reset_data)
+
+        return render_template("forgot-password-successful.html"), 200
+
     @ app.errorhandler(403)
     def access_forbidden(e: Exception) -> Response:
         return render_template('403.html'), 403
