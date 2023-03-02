@@ -176,3 +176,12 @@ class TestMain:
             assert response2.status_code == 200
             response3 = c.post('/api/user/auth-check', headers=auth_headers_wrong_password)
             assert response3.status_code == 401
+
+    def test_auth_check_user_does_not_exist(self, test_client):
+        bad_credentials = "userdoesnotexist:somepassword"
+        bad_credentials_base64 = base64.b64encode(bad_credentials.encode('utf-8')).decode('utf-8')
+        auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+                        'Authorization': 'Basic ' + bad_credentials_base64}
+        with test_client as c:
+            response = c.post('/api/user/auth-check', headers=auth_headers)
+            assert response.status_code == 401
