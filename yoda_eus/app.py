@@ -81,6 +81,14 @@ def create_app(config_filename="flask.cfg") -> Flask:
         csrf = CSRFProtect()
         csrf.init_app(app)
 
+        def csrf_tokens_enabled():
+            return True
+        app.jinja_env.globals.update(csrf_tokens_enabled=csrf_tokens_enabled)
+    else:
+        def csrf_tokens_enabled():
+            return False
+        app.jinja_env.globals.update(csrf_tokens_enabled=csrf_tokens_enabled)
+
     def csrf_exempt(f):
         if app.config.get("CSRF_TOKENS_ENABLED").lower() != "false":
             return csrf.exempt(f)

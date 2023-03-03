@@ -17,7 +17,9 @@
             </div>
             <div class="panel-body">
                <form method="POST" class="form-horizontal" validationProcess="YodaPasswordValidation">
+                    {% if csrf_tokens_enabled() %}
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% endif %}
                     <input type="hidden" name="secret_hash" value="{{ secret_hash }}">
                     <div class="form-group">
                         <label class="col-sm-3 control-label" for="f-activation-username">Terms of use</label>
