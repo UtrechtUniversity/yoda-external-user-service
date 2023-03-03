@@ -101,7 +101,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
     Session(app)
 
     # Load test data if required for integration tests
-    if app.config.get("LOAD_TEST_DATA", "").lower() != "false":
+    if app.config.get("LOAD_TEST_DATA", "false").lower() != "false":
         with app.app_context():
             now = datetime.now()
             hashed_password = bcrypt.hashpw("Test123456!!!".encode("utf-8"), bcrypt.gensalt())
