@@ -117,7 +117,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
                                   creator_zone="testZone",
                                   hash="resethash",
                                   hash_time=now,
-                                  password=hashed_password)
+                                  password=hashed_password.decode('utf-8'))
             db.session.add(unactivated_user)
             db.session.add(activated_user)
             db.session.commit()
@@ -146,7 +146,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
             return response
 
         user = User.query.filter_by(username=username).first()
-        if user is None or user.password == "" or not bcrypt.checkpw(password.encode("utf-8"), user.password):
+        if user is None or user.password == "" or not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
             response_content = {"status": "error", "message": "Incorrect credentials."}
             response = make_response(jsonify(response_content), 401)
             response.headers["WWW-Authenticate"] = "Basic realm = \"yoda-extuser\""
@@ -358,7 +358,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
         password = form_inputs["f-activation-password"]
         user.hash = None
         user.hashtime = None
-        user.password = bcrypt.hashpw(password.encode('utf8'), salt)
+        user.password = bcrypt.hashpw(password.encode('utf8'), salt).decode('utf-8')
         db.session.commit()
 
         # Send confirmation emails
@@ -431,7 +431,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
         password = form_inputs["f-reset-password-password"]
         user.hash = None
         user.hashtime = None
-        user.password = bcrypt.hashpw(password.encode('utf8'), salt)
+        user.password = bcrypt.hashpw(password.encode('utf8'), salt).decode('utf-8')
         db.session.commit()
 
         # Confirm activation to user
