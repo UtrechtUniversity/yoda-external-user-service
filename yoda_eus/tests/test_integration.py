@@ -26,21 +26,21 @@ class TestMain:
 
     def test_no_api_secret(self, test_client):
         with test_client as c:
-            response1 = c.post('/api/user/add', json={})
+            response1 = c.post('/api/user/add', data={})
             assert response1.status_code == 403
-            response2 = c.post('/api/user/delete', json={})
+            response2 = c.post('/api/user/delete', data={})
             assert response2.status_code == 403
-            response3 = c.post('/api/user/auth-check', json={})
+            response3 = c.post('/api/user/auth-check', data={})
             assert response3.status_code == 403
 
     def test_wrong_api_secret(self, test_client):
         auth_headers = {'X-Yoda-External-User-Secret': "wrong_secret"}
         with test_client as c:
-            response1 = c.post('/api/user/add', json={}, headers=auth_headers)
+            response1 = c.post('/api/user/add', data={}, headers=auth_headers)
             assert response1.status_code == 403
-            response2 = c.post('/api/user/delete', json={}, headers=auth_headers)
+            response2 = c.post('/api/user/delete', data={}, headers=auth_headers)
             assert response2.status_code == 403
-            response3 = c.post('/api/user/auth-check', json={}, headers=auth_headers)
+            response3 = c.post('/api/user/auth-check', data={}, headers=auth_headers)
             assert response3.status_code == 403
 
     def test_delete_nonexisting(self, test_client):
@@ -92,7 +92,7 @@ class TestMain:
 
     def test_forgot_password_nonexistent(self, test_client):
         with test_client as c:
-            response = c.post('/user/forgot-password', json={"f-forgot-password-username": "doesnotexist"})
+            response = c.post('/user/forgot-password', data={"username": "doesnotexist"})
             assert response.status_code == 404
 
     def test_forgot_password_existing(self, test_client):
@@ -140,15 +140,15 @@ class TestMain:
                                 "password": "Test1234567!!!",
                                 "cb-activation-tou": ""}
         with test_client as c:
-            response1 = c.post(activate_url, json=mismatched_passwords_params)
+            response1 = c.post(activate_url, data=mismatched_passwords_params)
             assert response1.status_code == 422
-            response2 = c.post(activate_url, json=toosimple_password_params)
+            response2 = c.post(activate_url, data=toosimple_password_params)
             assert response2.status_code == 422
-            response3 = c.post(activate_url, json=tou_not_accepted_params)
+            response3 = c.post(activate_url, data=tou_not_accepted_params)
             assert response3.status_code == 422
-            response4 = c.post(activate_url, json=multiple_problems_params)
+            response4 = c.post(activate_url, data=multiple_problems_params)
             assert response4.status_code == 422
-            response5 = c.post(activate_url, json=missing_field_params)
+            response5 = c.post(activate_url, data=missing_field_params)
             assert response5.status_code == 422
 
     def test_activate_and_check_auth(self, test_client):
@@ -170,7 +170,7 @@ class TestMain:
                        "password_again": password,
                        "cb-activation-tou": ""}
         with test_client as c:
-            response1 = c.post(activate_url, json=good_params)
+            response1 = c.post(activate_url, data=good_params)
             assert response1.status_code == 200
             response2 = c.post('/api/user/auth-check', headers=auth_headers_ok)
             assert response2.status_code == 200
@@ -211,12 +211,15 @@ class TestMain:
                                     "password_again": "Test1234567!!!"}
         missing_field_params = {"username": "unactivatedusername",
                                 "password": "Test1234567!!!"}
+
+        with test_client as c:
+            response1 = c.post(reset_password_url, data=mismatched_passwords_params)
             assert response1.status_code == 422
-            response2 = c.post(reset_password_url, json=toosimple_password_params)
+            response2 = c.post(reset_password_url, data=toosimple_password_params)
             assert response2.status_code == 422
-            response3 = c.post(reset_password_url, json=multiple_problems_params)
+            response3 = c.post(reset_password_url, data=multiple_problems_params)
             assert response3.status_code == 422
-            response4 = c.post(reset_password_url, json=missing_field_params)
+            response4 = c.post(reset_password_url, data=missing_field_params)
             assert response4.status_code == 422
 
     def test_reset_password_and_check_auth(self, test_client):
@@ -242,7 +245,7 @@ class TestMain:
             response2 = c.post('/api/user/auth-check', headers=new_auth_headers)
             assert response2.status_code == 401
             # Check password reset returns success code
-            response3 = c.post(reset_password_url, json=reset_params)
+            response3 = c.post(reset_password_url, data=reset_params)
             assert response3.status_code == 200
             # Check that old password is no longer valid, but new one is
             response4 = c.post('/api/user/auth-check', headers=old_auth_headers)
