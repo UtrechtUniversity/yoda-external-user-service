@@ -512,7 +512,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
 
 
 def get_random_hash():
-    return secrets.token_hex(64)
+    return secrets.token_hex(32)
 
 
 if __name__ == "__main__":
