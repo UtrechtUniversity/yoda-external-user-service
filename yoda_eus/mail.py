@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
 
-from flask import render_template
+from jinja2 import BaseLoader, Environment
 
 
 def send_email_template(app, to, subject, template_name, template_data):
@@ -32,8 +32,10 @@ def send_email_template(app, to, subject, template_name, template_data):
     html_footer_template = Path(os.path.join(template_path, "common-end.html.j2")).read_text()
     html_full_template = html_header_template + html_main_template + html_footer_template
 
-    plain_body = render_template(text_template, **template_data)
-    html_body = render_template(html_full_template, **template_data)
+    plain_body_template = Environment(loader=BaseLoader).from_string(text_template)
+    plain_body = plain_body_template.render(**template_data)
+    html_body_template = Environment(loader=BaseLoader).from_string(html_full_template)
+    html_body = html_body_template.render(**template_data)
 
     send_email(app, to, subject, plain_body, html_body)
 
@@ -54,12 +56,22 @@ def send_email(app, to, subject, plain_body, html_body):
 
     """
     app.logger.info('Sending mail to <{}>, subject <{}>'.format(to, subject))
+
+    fmt_addr = '{} <{}>'.format
+
     mp_msg = MIMEMultipart('alternative')
+    mp_msg['Reply-To'] = fmt_addr(app.config.get("SMTP_REPLYTO_NAME"),
+                                  app.config.get("SMTP_REPLYTO_EMAIL"))
+    mp_msg['Date'] = email.utils.formatdate()
+    mp_msg['From'] = fmt_addr(app.config.get("SMTP_FROM_NAME"),
+                              app.config.get("SMTP_FROM_EMAIL"))
+    mp_msg['To'] = to
+    mp_msg['Subject'] = subject
 
     # e.g. 'smtps://smtp.gmail.com:465' for SMTP over TLS, or
     # 'smtp://smtp.gmail.com:587' for STARTTLS on the mail submission port.
     proto, host, port = re.search(r'^(smtps?)://([^:]+)(?::(\d+))?$',
-                                  app.config.get('SMTP_SERVER').groups())
+                                  app.config.get('SMTP_SERVER')).groups()
 
     # Default to port 465 for SMTP over TLS, and 587 for standard mail
     # submission with STARTTLS.
@@ -68,7 +80,7 @@ def send_email(app, to, subject, plain_body, html_body):
     try:
         smtp = (smtplib.SMTP_SSL if proto == 'smtps' else smtplib.SMTP)(host, port)
 
-        if proto != 'smtps' and app.config.get("smtp_starttls").lower() == "true":
+        if proto != 'smtps' and app.config.get("SMTP_STARTTLS").lower() == "true":
             # Enforce TLS.
             smtp.starttls()
 
@@ -83,18 +95,7 @@ def send_email(app, to, subject, plain_body, html_body):
     except Exception:
         raise Exception('[EMAIL] Could not login to mail server with configured credentials')
 
-    fmt_addr = '{} <{}>'.format
-
-    plain_msg = MIMEText(plain_body, 'plain', 'UTF-8')
-    plain_msg['Reply-To'] = fmt_addr(app.config.get("SMTP_REPLYTO_NAME"),
-                                     app.config.get("SMTP_REPLYTO_EMAIL"))
-    plain_msg['Date'] = email.utils.formatdate()
-    plain_msg['From'] = fmt_addr(app.config.get("SMTP_FROM_NAME"),
-                                 app.config.get("SMTP_FROM_EMAIL"))
-    plain_msg['To'] = to
-    plain_msg['Subject'] = subject
-
-    mp_msg.attach(plain_msg)
+    mp_msg.attach(MIMEText(plain_body, 'plain'))
     mp_msg.attach(MIMEText(html_body, 'html'))
 
     try:

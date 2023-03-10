@@ -240,7 +240,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
                                     content['username'],
                                     'Welcome to Yoda!',
                                     "invitation",
-                                    **invitation_data)
+                                    invitation_data)
 
                 # Send invitation confirmation
                 confirmation_data = {"USERNAME": content['username'],
@@ -249,7 +249,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
                                     content["username"],
                                     'You have invited an external user to Yoda',
                                     'invitation-sent',
-                                    **confirmation_data)
+                                    confirmation_data)
 
             # Send response
             response = {"status": "ok", "message": "User created."}
@@ -303,7 +303,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
                                 user.username,
                                 'Yoda password reset',
                                 "reset-password",
-                                **reset_data)
+                                reset_data)
 
         return render_template("forgot-password-successful.html"), 200
 
@@ -376,13 +376,13 @@ def create_app(config_filename="flask.cfg") -> Flask:
                                 user.username,
                                 'You have successfully activated your Yoda account',
                                 "activation-successful",
-                                **activation_data)
+                                activation_data)
             activation_data["CREATOR"] = user.creator_name
             send_email_template(app,
                                 user.creator_name,
                                 'An external user has activated their Yoda account',
                                 "invitation_accepted",
-                                **activation_data)
+                                activation_data)
 
         # Confirm activation to user
         return render_template("activation-successful.html", **params), 200
