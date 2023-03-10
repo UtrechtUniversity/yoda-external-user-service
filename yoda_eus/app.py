@@ -166,7 +166,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
     @app.route('/api/user/delete', methods=['POST'])
     @csrf_exempt
     def delete_user() -> Response:
-        content = request.json
+        content = request.get_json(force=True)
 
         compulsory_fields = ["username", "userzone"]
         for field in compulsory_fields:
@@ -195,7 +195,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
     @app.route("/api/user/add", methods=['POST'])
     @csrf_exempt
     def add_user() -> Response:
-        content = request.json
+        content = request.get_json(force=True)
         now = datetime.now()
 
         compulsory_fields = ["username", "creator_user", "creator_zone"]
