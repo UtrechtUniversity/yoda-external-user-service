@@ -473,7 +473,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
 
     @app.before_request
     def check_api_secret() -> Response:
-        secret_header = 'HTTP_X_YODA_EXTERNAL_USER_SECRET'
+        secret_header = 'X-Yoda-External-User-Secret'
         if not (request.path.startswith("/api/")):
             return
         elif secret_header in request.headers and request.headers[secret_header] == app.config.get("API_SECRET"):

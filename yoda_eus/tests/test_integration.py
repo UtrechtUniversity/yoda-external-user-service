@@ -34,7 +34,7 @@ class TestMain:
             assert response3.status_code == 403
 
     def test_wrong_api_secret(self, test_client):
-        auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': "wrong_secret"}
+        auth_headers = {'X-Yoda-External-User-Secret': "wrong_secret"}
         with test_client as c:
             response1 = c.post('/api/user/add', json={}, headers=auth_headers)
             assert response1.status_code == 403
@@ -44,14 +44,14 @@ class TestMain:
             assert response3.status_code == 403
 
     def test_delete_nonexisting(self, test_client):
-        auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret'}
+        auth_headers = {'X-Yoda-External-User-Secret': 'dummy_api_secret'}
         params = {"username": "notexisting", "userzone": "shouldnotmatter"}
         with test_client as c:
             response = c.post('/api/user/delete', json=params, headers=auth_headers)
             assert response.status_code == 404
 
     def test_add_and_remove_user_once(self, test_client):
-        auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret'}
+        auth_headers = {'X-Yoda-External-User-Secret': 'dummy_api_secret'}
         username = "testuser"
         creator_user = "technicaladmin"
         creator_zone = "testZone"
@@ -65,7 +65,7 @@ class TestMain:
             assert response2.status_code == 204
 
     def test_add_and_remove_user_twice(self, test_client):
-        auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret'}
+        auth_headers = {'X-Yoda-External-User-Secret': 'dummy_api_secret'}
         username = "testuser"
         creator_user = "technicaladmin"
         creator_zone1 = "testZone1"
@@ -96,7 +96,7 @@ class TestMain:
             assert response.status_code == 404
 
     def test_forgot_password_existing(self, test_client):
-        auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret'}
+        auth_headers = {'X-Yoda-External-User-Secret': 'dummy_api_secret'}
         username = "testforgotuser"
         creator_user = "technicaladmin"
         creator_zone = "testZone"
@@ -158,9 +158,9 @@ class TestMain:
         bad_credentials = username + ":wrongpassword"
         good_credentials_base64 = base64.b64encode(good_credentials.encode('utf-8')).decode('utf-8')
         bad_credentials_base64 = base64.b64encode(bad_credentials.encode('utf-8')).decode('utf-8')
-        auth_headers_ok = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+        auth_headers_ok = {'X-Yoda-External-User-Secret': 'dummy_api_secret',
                            'Authorization': 'Basic ' + good_credentials_base64}
-        auth_headers_wrong_password = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+        auth_headers_wrong_password = {'X-Yoda-External-User-Secret': 'dummy_api_secret',
                                        'Authorization': 'Basic ' + bad_credentials_base64}
 
         activate_url = '/user/activate/goodhash'
@@ -180,7 +180,7 @@ class TestMain:
     def test_auth_check_user_does_not_exist(self, test_client):
         bad_credentials = "userdoesnotexist:somepassword"
         bad_credentials_base64 = base64.b64encode(bad_credentials.encode('utf-8')).decode('utf-8')
-        auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+        auth_headers = {'X-Yoda-External-User-Secret': 'dummy_api_secret',
                         'Authorization': 'Basic ' + bad_credentials_base64}
         with test_client as c:
             response = c.post('/api/user/auth-check', headers=auth_headers)
@@ -226,9 +226,9 @@ class TestMain:
         new_credentials = "activateduser:" + new_password
         old_credentials_base64 = base64.b64encode(old_credentials.encode('utf-8')).decode('utf-8')
         new_credentials_base64 = base64.b64encode(new_credentials.encode('utf-8')).decode('utf-8')
-        old_auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+        old_auth_headers = {'X-Yoda-External-User-Secret': 'dummy_api_secret',
                             'Authorization': 'Basic ' + old_credentials_base64}
-        new_auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
+        new_auth_headers = {'X-Yoda-External-User-Secret': 'dummy_api_secret',
                             'Authorization': 'Basic ' + new_credentials_base64}
         reset_password_url = '/user/reset-password/resethash'
         reset_params = {"username": "activatedusername",
