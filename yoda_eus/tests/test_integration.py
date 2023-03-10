@@ -105,7 +105,7 @@ class TestMain:
         with test_client as c:
             response1 = c.post('/api/user/add', json=add_params, headers=auth_headers)
             assert response1.status_code == 201
-            response2 = c.post('/user/forgot-password', json={"f-forgot-password-username": username})
+            response2 = c.post('/user/forgot-password', data={"username": username})
             assert response2.status_code == 200
 
     def test_activate_no_hash(self, test_client):
@@ -122,22 +122,22 @@ class TestMain:
 
     def test_activate_wrong_form_input(self, test_client):
         activate_url = '/user/activate/goodhash'
-        mismatched_passwords_params = {"f-activation-username": "unactivatedusername",
-                                       "f-activation-password": "Test1234567!!!",
-                                       "f-activation-password-repeat": "Test7654321!!!",
+        mismatched_passwords_params = {"username": "unactivatedusername",
+                                       "password": "Test1234567!!!",
+                                       "password_again": "Test7654321!!!",
                                        "cb-activation-tou": ""}
-        toosimple_password_params = {"f-activation-username": "unactivatedusername",
-                                     "f-activation-password": "Test",
-                                     "f-activation-password-repeat": "Test",
+        toosimple_password_params = {"username": "unactivatedusername",
+                                     "password": "Test",
+                                     "password_again": "Test",
                                      "cb-activation-tou": ""}
-        tou_not_accepted_params = {"f-activation-username": "unactivatedusername",
-                                   "f-activation-password": "Test1234567!!!",
-                                   "f-activation-password-repeat": "Test1234567!!!"}
-        multiple_problems_params = {"f-activation-username": "unactivatedusername",
-                                    "f-activation-password": "Test",
-                                    "f-activation-password-repeat": "Test1234567!!!"}
-        missing_field_params = {"f-activation-username": "unactivatedusername",
-                                "f-activation-password": "Test1234567!!!",
+        tou_not_accepted_params = {"username": "unactivatedusername",
+                                   "password": "Test1234567!!!",
+                                   "password_again": "Test1234567!!!"}
+        multiple_problems_params = {"username": "unactivatedusername",
+                                    "password": "Test",
+                                    "password_again": "Test1234567!!!"}
+        missing_field_params = {"username": "unactivatedusername",
+                                "password": "Test1234567!!!",
                                 "cb-activation-tou": ""}
         with test_client as c:
             response1 = c.post(activate_url, json=mismatched_passwords_params)
@@ -165,9 +165,9 @@ class TestMain:
 
         activate_url = '/user/activate/goodhash'
         password = "Test1234567!!!"
-        good_params = {"f-activation-username": username,
-                       "f-activation-password": password,
-                       "f-activation-password-repeat": password,
+        good_params = {"username": username,
+                       "password": password,
+                       "password_again": password,
                        "cb-activation-tou": ""}
         with test_client as c:
             response1 = c.post(activate_url, json=good_params)
@@ -200,20 +200,17 @@ class TestMain:
 
     def test_reset_password_wrong_form_input(self, test_client):
         reset_password_url = '/user/reset-password/resethash'
-        mismatched_passwords_params = {"f-reset-password-username": "unactivatedusername",
-                                       "f-reset-password-password": "Test1234567!!!",
-                                       "f-reset-password-password-repeat": "Test7654321!!!"}
-        toosimple_password_params = {"f-reset-password-username": "unactivatedusername",
-                                     "f-reset-password-password": "Test",
-                                     "f-reset-password-password-repeat": "Test"}
-        multiple_problems_params = {"f-reset-password-username": "unactivatedusername",
-                                    "f-reset-password-password": "Test",
-                                    "f-reset-password-password-repeat": "Test1234567!!!"}
-        missing_field_params = {"f-reset-password-username": "unactivatedusername",
-                                "f-reset-password-password": "Test1234567!!!"}
-
-        with test_client as c:
-            response1 = c.post(reset_password_url, json=mismatched_passwords_params)
+        mismatched_passwords_params = {"username": "unactivatedusername",
+                                       "password": "Test1234567!!!",
+                                       "password_again": "Test7654321!!!"}
+        toosimple_password_params = {"username": "unactivatedusername",
+                                     "password": "Test",
+                                     "password_again": "Test"}
+        multiple_problems_params = {"username": "unactivatedusername",
+                                    "password": "Test",
+                                    "password_again": "Test1234567!!!"}
+        missing_field_params = {"username": "unactivatedusername",
+                                "password": "Test1234567!!!"}
             assert response1.status_code == 422
             response2 = c.post(reset_password_url, json=toosimple_password_params)
             assert response2.status_code == 422
@@ -234,9 +231,9 @@ class TestMain:
         new_auth_headers = {'HTTP_X_YODA_EXTERNAL_USER_SECRET': 'dummy_api_secret',
                             'Authorization': 'Basic ' + new_credentials_base64}
         reset_password_url = '/user/reset-password/resethash'
-        reset_params = {"f-reset-password-username": "activatedusername",
-                        "f-reset-password-password": new_password,
-                        "f-reset-password-password-repeat": new_password}
+        reset_params = {"username": "activatedusername",
+                        "password": new_password,
+                        "password_again": new_password}
 
         with test_client as c:
             # Check that old password is valid, but new one not yet.

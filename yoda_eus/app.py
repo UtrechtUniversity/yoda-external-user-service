@@ -274,7 +274,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
 
     @app.route("/user/forgot-password", methods=['POST'])
     def process_forgot_password() -> Response:
-        username = request.get_json(force=True).get("f-forgot-password-username", "")
+        username = request.form.get("username", "")
 
         # Check form input and handle errors
         if len(username) == 0:
@@ -285,7 +285,9 @@ def create_app(config_filename="flask.cfg") -> Flask:
 
         if user is None:
             errors = {"errors": ["User name not found. Only external users can reset their password."]}
-            return render_template("forgot-password.html", ** errors), 404
+            response = make_response(render_template('forgot-password.html', **errors))
+            response.status_code = 404
+            return response
 
         # Generate and update user hash
         secret_hash = get_random_hash()
@@ -341,18 +343,18 @@ def create_app(config_filename="flask.cfg") -> Flask:
             return render_template("activate.html", **params)
 
         # Input validation of form data
-        form_inputs = request.get_json(force=True)
+        form_inputs = request.form
 
-        for field in ["f-activation-username", "f-activation-password", "f-activation-password-repeat"]:
+        for field in ["username", "password", "password_again"]:
             if field not in form_inputs or form_inputs[field] == "":
                 params["errors"] = ['Please fill in all required fields.']
                 return render_template("activate.html", **params), 422
 
-        if form_inputs["f-activation-password"] != form_inputs["f-activation-password-repeat"]:
+        if form_inputs["password"] != form_inputs["password_again"]:
             params["errors"] = ["The passwords do not match"]
             return render_template("activate.html", **params), 422
 
-        password_complexity_errors = check_password_complexity(form_inputs["f-activation-password"])
+        password_complexity_errors = check_password_complexity(form_inputs["password"])
         if len(password_complexity_errors) > 0:
             params["errors"] = password_complexity_errors
             return render_template("activate.html", **params), 422
@@ -363,7 +365,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
 
         # Activate account
         salt = bcrypt.gensalt()
-        password = form_inputs["f-activation-password"]
+        password = form_inputs["password"]
         user.hash = None
         user.hashtime = None
         user.password = bcrypt.hashpw(password.encode('utf8'), salt).decode('utf-8')
@@ -418,25 +420,25 @@ def create_app(config_filename="flask.cfg") -> Flask:
             return render_template("reset-password.html", **params)
 
         # Input validation of form data
-        form_inputs = request.get_json(force=True)
+        form_inputs = request.form
 
-        for field in ["f-reset-password-username", "f-reset-password-password", "f-reset-password-password-repeat"]:
+        for field in ["username", "password", "password_again"]:
             if field not in form_inputs or form_inputs[field] == "":
                 params["errors"] = ['Please fill in all required fields.']
                 return render_template("reset-password.html", **params), 422
 
-        if form_inputs["f-reset-password-password"] != form_inputs["f-reset-password-password-repeat"]:
+        if form_inputs["password"] != form_inputs["password_again"]:
             params["errors"] = ["The passwords do not match"]
             return render_template("reset-password.html", **params), 422
 
-        password_complexity_errors = check_password_complexity(form_inputs["f-reset-password-password"])
+        password_complexity_errors = check_password_complexity(form_inputs["password"])
         if len(password_complexity_errors) > 0:
             params["errors"] = password_complexity_errors
             return render_template("reset-password.html", **params), 422
 
         # Reset password account
         salt = bcrypt.gensalt()
-        password = form_inputs["f-reset-password-password"]
+        password = form_inputs["password"]
         user.hash = None
         user.hashtime = None
         user.password = bcrypt.hashpw(password.encode('utf8'), salt).decode('utf-8')
