@@ -246,7 +246,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
                 confirmation_data = {"USERNAME": content['username'],
                                      "CREATOR": content['creator_user']}
                 send_email_template(app,
-                                    content["username"],
+                                    content["creator_user"],
                                     'You have invited an external user to Yoda',
                                     'invitation-sent',
                                     confirmation_data)
