@@ -386,11 +386,11 @@ def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
                                 'You have successfully activated your Yoda account',
                                 "activation-successful",
                                 activation_data)
-            activation_data["CREATOR"] = user.creator_name
+            activation_data["CREATOR"] = user.creator_user
             send_email_template(app,
-                                user.creator_name,
+                                user.creator_user,
                                 'An external user has activated their Yoda account',
-                                "invitation_accepted",
+                                "invitation-accepted",
                                 activation_data)
 
         # Confirm activation to user
