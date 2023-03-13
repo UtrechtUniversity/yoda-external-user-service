@@ -44,7 +44,7 @@ class UserZone(db.Model):
     user = db.relationship("User", back_populates="user_zones")
 
 
-def create_app(config_filename="flask.cfg") -> Flask:
+def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
     # create a minimal app
     app = Flask(__name__,
                 static_folder="/var/www/yoda/static/",
@@ -470,6 +470,12 @@ def create_app(config_filename="flask.cfg") -> Flask:
         response.headers['X-Content-Type-Options'] = 'nosniff'
 
         return response
+
+    if not enable_api:
+        @app.before_request
+        def refuse_api_requests() -> Response:
+            if request.path.startswith("/api/"):
+                abort(make_response(jsonify({'status': 'error', 'message': 'The EUS API has been disabled on this interface.'}), 403))
 
     @app.before_request
     def check_api_secret() -> Response:
