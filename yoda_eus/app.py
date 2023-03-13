@@ -153,15 +153,22 @@ def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
             response.headers["WWW-Authenticate"] = "Basic realm = \"yoda-extuser\""
             return response
 
-        user = User.query.filter_by(username=username).first()
-        if user is None or user.password == "" or not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+        def fail_incorrect_credentials():
             response_content = {"status": "error", "message": "Incorrect credentials."}
             response = make_response(jsonify(response_content), 401)
             response.headers["WWW-Authenticate"] = "Basic realm = \"yoda-extuser\""
             return response
+
+        user = User.query.filter_by(username=username).first()
+        if user is None or user.password == "":
+            return fail_incorrect_credentials()
+
+        password_to_check = password.rstrip('\n\r\0').encode("utf-8")
+        hash_to_check = user.password.encode('utf-8')
+        if bcrypt.checkpw(password_to_check, hash_to_check):
+            return make_response("Authenticated", 200)
         else:
-            response = make_response("Authenticated", 200)
-            return response
+            return fail_incorrect_credentials()
 
     @app.route('/api/user/delete', methods=['POST'])
     @csrf_exempt
