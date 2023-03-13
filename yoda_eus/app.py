@@ -479,7 +479,7 @@ def create_app(config_filename="flask.cfg") -> Flask:
         elif secret_header in request.headers and request.headers[secret_header] == app.config.get("API_SECRET"):
             return
         else:
-            abort(403)
+            abort(make_response(jsonify({'status': 'error', 'message': 'EUS secret header not present or does not match.'}), 403))
 
     @app.before_request
     def static_loader() -> Response:
