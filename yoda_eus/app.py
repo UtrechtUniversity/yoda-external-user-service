@@ -323,7 +323,7 @@ def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
         if hash is None or hash == "":
             # Failsafe
             params = {"activation_error_message": "Activation link is invalid"}
-            return render_template('activation-error.html'), 403
+            return render_template('activation-error.html', **params), 403
         else:
             params = {"secret_hash": hash}
 
@@ -337,10 +337,10 @@ def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
             return render_template('activation-error.html', **params), 500
         elif len(users) == 0:
             params = {"activation_error_message": "Activation link is invalid."}
-            return render_template('activation-error.html'), 403
+            return render_template('activation-error.html', **params), 403
         elif users[0].password != "" and users[0].password is not None:
             params = {"activation_error_message": "Sorry, your activation link is no longer valid."}
-            return render_template('activation-error.html'), 403
+            return render_template('activation-error.html', **params), 403
 
         user = users[0]
         params["username"] = user.username
@@ -403,7 +403,7 @@ def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
         if hash is None or hash == "":
             # Failsafe
             params = {"reset_error_message": "Password reset link is invalid"}
-            return render_template('reset-password-error.html'), 403
+            return render_template('reset-password-error.html', **params), 403
         else:
             params = {"secret_hash": hash}
 
@@ -417,7 +417,7 @@ def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
             return render_template('reset-password-error.html', **params), 500
         elif len(users) == 0:
             params = {"reset_error_message": "Password reset link is invalid."}
-            return render_template('reset-password-error.html'), 403
+            return render_template('reset-password-error.html', **params), 403
 
         user = users[0]
         params["username"] = user.username
