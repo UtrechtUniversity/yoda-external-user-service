@@ -1,3 +1,6 @@
+__copyright__ = 'Copyright (c) 2023, Utrecht University'
+__license__ = 'GPLv3, see LICENSE'
+
 import string
 
 from yoda_eus.password_complexity import check_password_complexity
