@@ -2,9 +2,10 @@ __copyright__ = 'Copyright (c) 2023, Utrecht University'
 __license__ = 'GPLv3, see LICENSE'
 
 import string
+from typing import List
 
 
-def check_password_complexity(password: str) -> list:
+def check_password_complexity(password: str) -> List[str]:
     """Checks whether a password meets EUS password complexity requirements.
 
        :param password: Password to check

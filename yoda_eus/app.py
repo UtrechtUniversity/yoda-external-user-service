@@ -7,7 +7,7 @@ import secrets
 import urllib.parse
 from datetime import datetime
 from os import path
-from typing import Dict
+from typing import Any, Dict
 
 import bcrypt
 from flask import abort, Flask, jsonify, make_response, render_template, request, Response, send_from_directory
@@ -22,7 +22,7 @@ from yoda_eus.password_complexity import check_password_complexity
 db = SQLAlchemy()
 
 
-class User(db.Model):
+class User(db.Model):  # type: ignore
     __tablename__ = "users"
     id = db.Column(db.Integer, db.Sequence("users_id_seq"), primary_key=True)
     username = db.Column(db.String(64), nullable=False, unique=True, index=True)
@@ -35,7 +35,7 @@ class User(db.Model):
     user_zones = db.relationship("UserZone", back_populates="user")
 
 
-class UserZone(db.Model):
+class UserZone(db.Model):  # type: ignore
     __tablename__ = "user_zones"
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     inviter_user = db.Column(db.String(255), nullable=False)
@@ -44,7 +44,7 @@ class UserZone(db.Model):
     user = db.relationship("User", back_populates="user_zones")
 
 
-def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
+def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> Flask:
     # create a minimal app
     app = Flask(__name__,
                 static_folder="/var/www/yoda/static/",
@@ -322,10 +322,10 @@ def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
         # Sanity checks secret hash
         if hash is None or hash == "":
             # Failsafe
-            params = {"activation_error_message": "Activation link is invalid"}
-            return render_template('activation-error.html', **params), 403
-        else:
-            params = {"secret_hash": hash}
+            failed_params = {"activation_error_message": "Activation link is invalid"}
+            return render_template('activation-error.html', **failed_params), 403
+
+        params: Dict[str, Any] = {"secret_hash": hash}
 
         # Validate secret hash and handle errors
         users = User.query.filter_by(hash=hash).all()
@@ -402,10 +402,10 @@ def create_app(config_filename="flask.cfg", enable_api=True) -> Flask:
         # Sanity checks secret hash
         if hash is None or hash == "":
             # Failsafe
-            params = {"reset_error_message": "Password reset link is invalid"}
-            return render_template('reset-password-error.html', **params), 403
-        else:
-            params = {"secret_hash": hash}
+            failed_params = {"reset_error_message": "Password reset link is invalid"}
+            return render_template('reset-password-error.html', **failed_params), 403
+
+        params: Dict[str, Any] = {"secret_hash": hash}
 
         # Validate secret hash and handle errors
         users = User.query.filter_by(hash=hash).all()

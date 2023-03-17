@@ -34,7 +34,7 @@ jobs:
 
       - name: Check static typing
         run: |
-          mypy . --explicit-package-bases || true
+          mypy yoda_eus --explicit-package-bases
 
       - name: Check code for common misspellings
         run: |
