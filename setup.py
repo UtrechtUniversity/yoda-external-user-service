@@ -13,6 +13,9 @@ setup(
     license='GPL3',
     entry_points={
     },
+    extras_require={
+        "test": ["pytest-flask==1.2.0", "pytest==7.2.1"],
+    },
     install_requires=[
         "bcrypt==4.0.1",
         "Flask==2.2.3",
