@@ -4,14 +4,12 @@ __license__ = 'GPLv3, see LICENSE'
 import string
 
 
-"""Checks whether a password meets EUS password complexity requirements.
-
-   :param password: Password to check
-   :returns       : List of validation error messages (empty list means it meets requirements)
-"""
-
-
 def check_password_complexity(password: str) -> list:
+    """Checks whether a password meets EUS password complexity requirements.
+
+       :param password: Password to check
+       :returns: List of validation error messages (empty list means it meets requirements)
+    """
     if len(password) == 0:
         return ["Password is empty"]
 
