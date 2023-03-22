@@ -23,6 +23,13 @@ db = SQLAlchemy()
 
 
 class User(db.Model):  # type: ignore
+    """
+    This class provides the ORM model for the users table, which stores data about external users.
+    Their username is their email address. The hash columns refer to the secret hash value that is
+    used for authenticating account activation and password resets. The creator columns refer to
+    the Yoda user who invited this external user.
+    """
+
     __tablename__ = "users"
     id = db.Column(db.Integer, db.Sequence("users_id_seq"), primary_key=True)
     username = db.Column(db.String(64), nullable=False, unique=True, index=True)
@@ -36,6 +43,12 @@ class User(db.Model):  # type: ignore
 
 
 class UserZone(db.Model):  # type: ignore
+    """
+    This class provides the ORM model for the user_zones table, which stores data about invitations.
+    It is possible that external users have been invited by more than one Yoda user. For example, this can
+    happen if an EUS instance is shared by multiple Yoda instances. EUS keeps tracks of invitations in order
+    to determine when an account can be removed completely.
+    """
     __tablename__ = "user_zones"
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     inviter_user = db.Column(db.String(255), nullable=False)
@@ -139,11 +152,24 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
     @app.route('/')
     @csrf_exempt
     def index() -> Response:
+        """
+        The index page can be used for determining whether the EUS is available (e.g. in a basic load balancer
+        health check).
+
+        :Returns: Flask response (shows themed empty page)
+        """
         return render_template('index.html')
 
     @app.route('/api/user/auth-check', methods=['POST'])
     @csrf_exempt
     def auth_check() -> Response:
+        """
+        API endpoint used by Yoda to authenticate external users. The credentials are provided
+        via basic authentication.
+
+        :Returns: Flask response (200 "Authenticated" if credentials match; otherwise
+                  401 + JSON response.
+        """
         try:
             username = request.authorization.username
             password = request.authorization.password
@@ -173,6 +199,13 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
     @app.route('/api/user/delete', methods=['POST'])
     @csrf_exempt
     def delete_user() -> Response:
+        """
+        API endpoint used by Yoda to delete external users. It should get a POST request
+        with JSON content containing a username and userzone key.
+
+        :Returns: Flask response (JSON content with status ("ok" or "error") and message
+                  field.
+        """
         content = request.get_json(force=True)
 
         compulsory_fields = ["username", "userzone"]
@@ -202,6 +235,15 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
     @app.route("/api/user/add", methods=['POST'])
     @csrf_exempt
     def add_user() -> Response:
+        """
+        API endpoint used by Yoda to create external users. It should get a POST request
+        with JSON content containing a username field, as well as a creator_user and creator_zone
+        field. The username is the email address of the new external user, whereas creator_user
+        and creator_zone refer to the person who invited the external user first.
+
+        :Returns: Flask response (JSON content with status ("ok" or "error") and message
+                  field.
+        """
         content = request.get_json(force=True)
         now = datetime.now()
 
@@ -277,10 +319,21 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
     @app.route("/user/forgot-password", methods=['GET'])
     def show_forgot_password_form() -> Response:
+        """
+         Shows the forgot password form, which can be used by external users to request
+         a link to reset their password.
+
+         :Returns: Flask response
+        """
         return render_template('forgot-password.html'), 200
 
     @app.route("/user/forgot-password", methods=['POST'])
     def process_forgot_password() -> Response:
+        """
+         Processes submits of the forgot password form by (presumably) external users
+
+         :Returns: Flask response
+        """
         username = request.form.get("username", "")
 
         # Check form input and handle errors
@@ -318,7 +371,14 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
     @app.route("/user/activate/<hash>", methods=['GET', 'POST'])
     def process_activate_account_form(hash: str) -> Response:
+        """
+         Processes clicks on activation links that external users receive via email when
+         they are invited. They can use the link to create an account.
 
+         :param hash: account activation hash
+
+         :Returns: Flask response
+        """
         # Sanity checks secret hash
         if hash is None or hash == "":
             # Failsafe
@@ -398,7 +458,15 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
     @app.route("/user/reset-password/<hash>", methods=['GET', 'POST'])
     def process_reset_password_form(hash: str) -> Response:
+        """
+        Processes clicks on passwords reset links that external users receive via email when
+        they request a reset using the forgot password form. They can use the link to reset
+        their password.
 
+        :param hash: password reset hash
+
+        :Returns: Flask response
+        """
         # Sanity checks secret hash
         if hash is None or hash == "":
             # Failsafe
@@ -468,7 +536,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
     @ app.after_request
     def add_security_headers(response: Response) -> Response:
-        """Add security headers."""  # noqa DAR101 DAR201
+        """Add generic security headers."""  # noqa DAR101 DAR201
 
         # Content Security Policy (CSP)
         response.headers['Content-Security-Policy'] = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'self'; form-action 'self'; object-src 'none'"  # noqa: E501
@@ -481,11 +549,22 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
     if not enable_api:
         @app.before_request
         def refuse_api_requests() -> Response:
+            """
+            The EUS presents two web interfaces (vhosts) on two different TCP ports. One of these
+            does not have the API available, so that API access can be restricted on a TCP level (e.g. in firewalls).
+
+            If this instance does not have the API enabled, access to API functions is intercepted and blocked by this function.
+            """
             if request.path.startswith("/api/"):
                 abort(make_response(jsonify({'status': 'error', 'message': 'The EUS API has been disabled on this interface.'}), 403))
 
     @app.before_request
     def check_api_secret() -> Response:
+        """
+        This ensures that API requests can only be processed if the right API secret is provided.
+
+        :Returns: Flask response (optionally)
+        """
         secret_header = 'X-Yoda-External-User-Secret'
         if not (request.path.startswith("/api/")):
             return
@@ -527,6 +606,9 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
 
 def get_random_hash():
+    """
+    :Returns: random value for the password reset and account activation secrets.
+    """
     return secrets.token_hex(32)
 
 
