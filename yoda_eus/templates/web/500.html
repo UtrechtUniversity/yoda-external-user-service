@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ super() }} &dash; Internal server error{% endblock title %}
+
+{% block content %}
+<div class="text-center">
+    <h1>Internal server error</h1>
+
+    <p>
+        We're sorry, but something went wrong on the server.<br>
+        Please contact your IT support department.<br>
+        You can click the button below to go back to the main page.
+    </p>
+    <a href="{{ url_for('index') }}" title="Main page" class="btn btn-primary">Main page</a>
+</div>
+{% endblock content %}

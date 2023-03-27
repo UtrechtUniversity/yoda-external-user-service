@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        {% block head %}
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+
+            <title>{% block title %}{{ config.get('EUS_TITLE_TEXT') }}{% endblock title %}</title>
+
+            <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+
+            <link rel="stylesheet" href="{{ url_for('static', filename='lib/fontawesome-free-6.0.0/css/fontawesome.min.css') }}">
+            <link rel="stylesheet" href="{{ url_for('static', filename='lib/fontawesome-free-6.0.0/css/all.min.css') }}">
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/yoda-portal.css') }}">
+            {% block style %}{% endblock style %}
+
+            <script src="{{ url_for('static', filename='lib/bootstrap-5.2.0/js/bootstrap.bundle.min.js') }}"></script>
+            <script src="{{ url_for('static', filename='js/yoda.js') }}"></script>
+            {% if g.user %}
+            <script src="{{ url_for('static', filename='lib/jquery-1.12.4/js/jquery.min.js') }}"></script>
+            {% endif %}
+            {% block scripts %}{% endblock scripts %}
+        {% endblock head %}
+    </head>
+
+    <body class="d-flex flex-column min-vh-100">
+        <header class="py-3">
+            <div class="container d-flex flex-wrap justify-content-center">
+                <a href="{{ url_for('index') }}" class="mb-lg-0 me-lg-auto text-dark text-decoration-none">
+                    <img class="logo" src="{{ url_for('static', filename='img/logo.svg') }}" alt="Logo">
+                </a>
+            </div>
+        </header>
+
+        {% include 'navigation.html' %}
+
+        {% block container %}
+        <div class="page">
+            <div class="container">
+                {% block content %}{% endblock content %}
+            </div>
+        </div>
+        {% endblock container %}
+
+        <footer class="footer">
+            {% block footer %}
+            <div class="container mt-4">
+                {% if g.user %}
+                    <p class="text-muted" data-bs-toggle="modal" data-bs-target="#aboutModal">Yoda {{ config.YODA_VERSION }}</p>
+                {% else %}
+                    <p class="text-muted">Yoda {{ config.YODA_VERSION }}</p>
+                {% endif %}
+            </div>
+            {% endblock footer %}
+        </footer>
+    </body>
+</html>
