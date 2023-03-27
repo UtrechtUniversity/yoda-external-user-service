@@ -29,19 +29,6 @@
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% endif %}
                     <input type="hidden" name="secret_hash" value="{{ secret_hash }}">
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="f-activation-username">Terms of use</label>
-                        <div class="col-sm-9">
-                            <br />
-                            By accessing and using Yoda, you agree to be bound by the
-                            Yoda terms of use as defined by Utrecht University. These terms are
-                            listed at <a href="https://www.uu.nl/en/research/yoda/what-is-yoda/terms-of-use">https://www.uu.nl/en/research/yoda/what-is-yoda/terms-of-use</a>
-                            <br />
-                            <div class="checkbox">
-                                <label><input type="checkbox" value="accepted" name="cb-activation-tou" id="cb-activation-tou"><strong>Please accept terms of use</strong></label>
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="form-group">
                         <label class="col-sm-3 control-label" for="f-activation-username">Username</label>
@@ -67,14 +54,29 @@
                             <i class="glyphicon glyphicon-ok password-check-ok password-again-check-icon-ok hide"></i>
                         </div>
                     </div>
+
+                   <p>{% include "password-requirements.html" %}</p>
+
+                   <div class="form-group">
+                        <label class="col-sm-3 control-label" for="f-activation-username"></label>
+                        <div class="col-sm-9">
+                            <br />
+                            By accessing and using Yoda, you agree to be bound by the
+                            Yoda terms of use as defined by Utrecht University. These terms are
+                            listed at <a href="https://www.uu.nl/en/research/yoda/what-is-yoda/terms-of-use">https://www.uu.nl/en/research/yoda/what-is-yoda/terms-of-use</a>
+                            <br />
+                            <div class="checkbox">
+                                <label><input type="checkbox" value="accepted" name="cb-activation-tou" id="cb-activation-tou" required/><strong>Please accept terms of use</strong></label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <div class="col-sm-offset-3 col-sm-9">
                             <input name="submit_button" id="f-activation-submit" class="btn btn-primary" type="submit" value="Activate" />
                         </div>
                     </div>
                 </form>
-
-                {% include "password-requirements.html" %}
             </div>
         </div>
     </div>
