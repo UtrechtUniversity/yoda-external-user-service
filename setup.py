@@ -18,7 +18,7 @@ setup(
     },
     install_requires=[
         "bcrypt==4.0.1",
-        "Flask==2.2.3",
+        "Flask==2.3.2",
         "Flask-session2==1.3.1",
         "Flask-SQLAlchemy==3.0.3",
         "Flask-wtf==1.1.1",
