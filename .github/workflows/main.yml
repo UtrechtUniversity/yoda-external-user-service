@@ -44,6 +44,10 @@ jobs:
         run: |
           flake8 --max-complexity 10 || true
 
+      - name: Basic flake8 check
+        run: |
+          flake8 yoda_eus --select=E999,F63,F7,F82,F831
+
       - name: Install package for tests
         run: |
           pip install wheel
