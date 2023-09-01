@@ -9,7 +9,54 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
 
+from email_validator import EmailNotValidError, validate_email
 from jinja2 import BaseLoader, Environment
+
+
+def is_email_valid(address):
+    """Determines whether an email address is valid
+
+    :param address: the email address
+
+    :returns: boolean value that indicates whether the email address is valid
+    """
+    try:
+        validate_email(address, check_deliverability=False)
+        return True
+    except EmailNotValidError:
+        return False
+
+
+def send_email_template_if_needed(app, to, subject, template_name, template_data):
+    """Send an e-mail with specified recipient, subject and body using templates if
+       application is configured to deliver it.
+
+    An email is sent if and only if:
+    - Email delivery has been enabled in the application configuration
+    - The email address is valid (or email address validation has been disabled)
+
+    The originating address and mail server credentials are taken from the
+    app configuration. The templates are retrieved from the template directory
+    specified in the app configuration.
+
+    :param app:                Flask application, used for logging and retrieving configuration
+    :param to:                 Recipient of the mail
+    :param subject:            Subject of mail
+    :param template_name:      Name of the template in the template directory to use, excluding extensions
+    :param template_data:      Variables to interpolate, as a dictionary
+
+    """
+    if app.config.get("MAIL_ENABLED").lower() == "false":
+        app.logger.warning("Not sending email to '{}' with subject '{}', because email delivery is disabled.".format(
+                           to, subject))
+        return
+
+    if (not is_email_valid(to) and app.config.get("MAIL_ONLY_TO_VALID_ADDRESS").lower() == "true"):
+        app.logger.warning("Not sending email to '{}' with subject '{}', because recipient address is invalid.".format(
+            to, subject))
+        return
+
+    send_email_template(app, to, subject, template_name, template_data)
 
 
 def send_email_template(app, to, subject, template_name, template_data):

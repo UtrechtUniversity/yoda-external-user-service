@@ -3,6 +3,7 @@ __license__ = 'GPLv3, see LICENSE'
 
 import string
 
+from yoda_eus.mail import is_email_valid
 from yoda_eus.password_complexity import check_password_complexity
 
 
@@ -46,3 +47,9 @@ class TestMain:
         assert "Password is too short: it needs to be at least 10 characters." in result
         assert "Password needs to contain at least one digit." in result
         assert "Password needs to contain at least one punctuation character ({})".format(string.punctuation) in result
+
+    def is_email_valid_yes(self):
+        assert is_email_valid("yoda@uu.nl")
+
+    def is_email_valid_no(self):
+        assert not is_email_valid("this is not a valid email address")
