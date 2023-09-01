@@ -15,7 +15,7 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from jinja2 import ChoiceLoader, FileSystemLoader
-from yoda_eus.mail import send_email_template
+from yoda_eus.mail import is_email_valid, send_email_template_if_needed
 from yoda_eus.password_complexity import check_password_complexity
 
 
@@ -278,27 +278,26 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
             db.session.commit()
 
-            if app.config.get("MAIL_ENABLED").lower() != "false":
-                # Send invitation
-                hash_url = "https://{}/user/activate/{}".format(app.config.get("YODA_EUS_FQDN"),
-                                                                secret_hash)
-                invitation_data = {'USERNAME': content['username'],
-                                   'CREATOR': content["creator_user"],
-                                   'HASH_URL': hash_url}
-                send_email_template(app,
-                                    content['username'],
-                                    'Welcome to Yoda!',
-                                    "invitation",
-                                    invitation_data)
+            # Send invitation
+            hash_url = "https://{}/user/activate/{}".format(app.config.get("YODA_EUS_FQDN"),
+                                                            secret_hash)
+            invitation_data = {'USERNAME': content['username'],
+                               'CREATOR': content["creator_user"],
+                               'HASH_URL': hash_url}
+            send_email_template_if_needed(app,
+                                          content['username'],
+                                          'Welcome to Yoda!',
+                                          "invitation",
+                                          invitation_data)
 
-                # Send invitation confirmation
-                confirmation_data = {"USERNAME": content['username'],
-                                     "CREATOR": content['creator_user']}
-                send_email_template(app,
-                                    content["creator_user"],
-                                    'You have invited an external user to Yoda',
-                                    'invitation-sent',
-                                    confirmation_data)
+            # Send invitation confirmation
+            confirmation_data = {"USERNAME": content['username'],
+                                 "CREATOR": content['creator_user']}
+            send_email_template_if_needed(app,
+                                          content["creator_user"],
+                                          'You have invited an external user to Yoda',
+                                          'invitation-sent',
+                                          confirmation_data)
 
             # Send response
             response = {"status": "ok", "message": "User created."}
@@ -349,6 +348,12 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
             response.status_code = 404
             return response
 
+        if (not is_email_valid(username) and app.config.get("MAIL_ONLY_TO_VALID_ADDRESS").lower() == "true"):
+            errors = {"errors": ["Unable to send password reset email, because your user name ('{}') is not a valid email address.".format(username)]}
+            response = make_response(render_template('forgot-password.html', **errors))
+            response.status_code = 404
+            return response
+
         # Generate and update user hash
         secret_hash = get_random_hash()
         user.hash = secret_hash
@@ -356,16 +361,15 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         db.session.commit()
 
         # Send password reset email
-        if app.config.get("MAIL_ENABLED").lower() != "false":
-            hash_url = "https://{}/user/reset-password/{}".format(app.config.get("YODA_EUS_FQDN"),
-                                                                  secret_hash)
-            reset_data = {'USERNAME': user.username,
-                          'HASH_URL': hash_url}
-            send_email_template(app,
-                                user.username,
-                                'Yoda password reset',
-                                "reset-password",
-                                reset_data)
+        hash_url = "https://{}/user/reset-password/{}".format(app.config.get("YODA_EUS_FQDN"),
+                                                              secret_hash)
+        reset_data = {'USERNAME': user.username,
+                      'HASH_URL': hash_url}
+        send_email_template_if_needed(app,
+                                      user.username,
+                                      'Yoda password reset',
+                                      "reset-password",
+                                      reset_data)
 
         return render_template("forgot-password-successful.html"), 200
 
@@ -439,19 +443,18 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         db.session.commit()
 
         # Send confirmation emails
-        if app.config.get("MAIL_ENABLED").lower() != "false":
-            activation_data = {'USERNAME': user.username}
-            send_email_template(app,
-                                user.username,
-                                'You have successfully activated your Yoda account',
-                                "activation-successful",
-                                activation_data)
-            activation_data["CREATOR"] = user.creator_user
-            send_email_template(app,
-                                user.creator_user,
-                                'An external user has activated their Yoda account',
-                                "invitation-accepted",
-                                activation_data)
+        activation_data = {'USERNAME': user.username}
+        send_email_template_if_needed(app,
+                                      user.username,
+                                      'You have successfully activated your Yoda account',
+                                      "activation-successful",
+                                      activation_data)
+        activation_data["CREATOR"] = user.creator_user
+        send_email_template_if_needed(app,
+                                      user.creator_user,
+                                      'An external user has activated their Yoda account',
+                                      "invitation-accepted",
+                                      activation_data)
 
         # Confirm activation to user
         return render_template("activation-successful.html", **params), 200
