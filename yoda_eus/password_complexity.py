@@ -33,4 +33,7 @@ def check_password_complexity(password: str) -> List[str]:
     if not (any(c in string.punctuation for c in password)):
         errors.append("Password needs to contain at least one punctuation character ({})".format(string.punctuation))
 
+    if "\\" in password:
+        errors.append("Password must not contain backslashes.")
+
     return errors
