@@ -124,7 +124,7 @@ class TestMain:
             assert response.status_code == 403
 
     def test_activate_wrong_form_input(self, test_client):
-        activate_url = '/user/activate/goodhash'
+        activate_url = '/user/activate/goodhash1'
         mismatched_passwords_params = {"username": "unactivatedusername",
                                        "password": "Test1234567!!!",
                                        "password_again": "Test7654321!!!",
@@ -154,9 +154,7 @@ class TestMain:
             response5 = c.post(activate_url, data=missing_field_params)
             assert response5.status_code == 422
 
-    def test_activate_and_check_auth(self, test_client):
-        username = "unactivateduser"
-        password = "Test1234567!!!"
+    def _test_activate_and_check_auth(self, test_client, password, username, hashname):
         good_credentials = username + ":" + password
         bad_credentials = username + ":wrongpassword"
         good_credentials_base64 = base64.b64encode(good_credentials.encode('utf-8')).decode('utf-8')
@@ -166,8 +164,7 @@ class TestMain:
         auth_headers_wrong_password = {'X-Yoda-External-User-Secret': 'dummy_api_secret',
                                        'Authorization': 'Basic ' + bad_credentials_base64}
 
-        activate_url = '/user/activate/goodhash'
-        password = "Test1234567!!!"
+        activate_url = '/user/activate/' + hashname
         good_params = {"username": username,
                        "password": password,
                        "password_again": password,
@@ -179,6 +176,18 @@ class TestMain:
             assert response2.status_code == 200
             response3 = c.post('/api/user/auth-check', headers=auth_headers_wrong_password)
             assert response3.status_code == 401
+
+    def test_activate_and_check_auth(self, test_client):
+        self._test_activate_and_check_auth(test_client, "Test1234567!!!", "unactivateduser1", "goodhash1")
+
+    def test_activate_and_check_auth_interpunction1(self, test_client):
+        self._test_activate_and_check_auth(test_client, "Test1!@#$%^&*()", "unactivateduser2", "goodhash2")
+
+    def test_activate_and_check_auth_interpunction2(self, test_client):
+        self._test_activate_and_check_auth(test_client, "Test1_-+={}[]\\|", "unactivateduser3", "goodhash3")
+
+    def test_activate_and_check_auth_interpunction3(self, test_client):
+        self._test_activate_and_check_auth(test_client, "Test1;:\"',./<>?", "unactivateduser4", "goodhash4")
 
     def test_auth_check_user_does_not_exist(self, test_client):
         bad_credentials = "userdoesnotexist:somepassword"

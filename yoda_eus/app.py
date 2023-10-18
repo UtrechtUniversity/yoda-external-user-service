@@ -126,12 +126,14 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         with app.app_context():
             now = datetime.now()
             hashed_password = bcrypt.hashpw("Test123456!!!".encode("utf-8"), bcrypt.gensalt())
-            unactivated_user = User(username="unactivateduser",
-                                    creator_time=now,
-                                    creator_user="creator",
-                                    creator_zone="testZone",
-                                    hash="goodhash",
-                                    hash_time=now)
+            for n in range(1, 5):
+                unactivated_user = User(username="unactivateduser" + str(n),
+                                        creator_time=now,
+                                        creator_user="creator",
+                                        creator_zone="testZone",
+                                        hash="goodhash" + str(n),
+                                        hash_time=now)
+                db.session.add(unactivated_user)
             activated_user = User(username="activateduser",
                                   creator_time=now,
                                   creator_user="creator",
@@ -139,7 +141,6 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
                                   hash="resethash",
                                   hash_time=now,
                                   password=hashed_password.decode('utf-8'))
-            db.session.add(unactivated_user)
             db.session.add(activated_user)
             db.session.commit()
             for user in [activated_user, unactivated_user]:
