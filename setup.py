@@ -22,7 +22,7 @@ setup(
         "Flask==2.3.2",
         "Flask-session2==1.3.1",
         "Flask-SQLAlchemy==3.0.3",
-        "Flask-wtf==1.1.1",
+        "Flask-wtf==1.2.1",
         "psycopg2-binary==2.9.5",
         "requests==2.31.0",
         "Werkzeug==2.3.7"
