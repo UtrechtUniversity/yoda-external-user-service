@@ -184,7 +184,7 @@ class TestMain:
         self._test_activate_and_check_auth(test_client, "Test1!@#$%^&*()", "unactivateduser2", "goodhash2")
 
     def test_activate_and_check_auth_interpunction2(self, test_client):
-        self._test_activate_and_check_auth(test_client, "Test1_-+={}[]\\|", "unactivateduser3", "goodhash3")
+        self._test_activate_and_check_auth(test_client, "Test1_-+={}[]|", "unactivateduser3", "goodhash3")
 
     def test_activate_and_check_auth_interpunction3(self, test_client):
         self._test_activate_and_check_auth(test_client, "Test1;:\"',./<>?", "unactivateduser4", "goodhash4")

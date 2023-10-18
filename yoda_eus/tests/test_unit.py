@@ -41,6 +41,10 @@ class TestMain:
         result = check_password_complexity("Test123456789")
         assert result == ["Password needs to contain at least one punctuation character ({})".format(string.punctuation)]
 
+    def test_password_validation_backslash(self):
+        result = check_password_complexity("Test\\123456789!")
+        assert result == ["Password must not contain backslashes."]
+
     def test_password_validation_multiple(self):
         result = check_password_complexity("Test")
         assert len(result) == 3
