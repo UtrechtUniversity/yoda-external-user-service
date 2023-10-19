@@ -126,7 +126,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         with app.app_context():
             now = datetime.now()
             hashed_password = bcrypt.hashpw("Test123456!!!".encode("utf-8"), bcrypt.gensalt())
-            for n in range(1, 5):
+            for n in range(1, 6):
                 unactivated_user = User(username="unactivateduser" + str(n),
                                         creator_time=now,
                                         creator_user="creator",

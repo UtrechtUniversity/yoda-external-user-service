@@ -189,6 +189,10 @@ class TestMain:
     def test_activate_and_check_auth_interpunction3(self, test_client):
         self._test_activate_and_check_auth(test_client, "Test1;:\"',./<>?", "unactivateduser4", "goodhash4")
 
+    def test_activate_and_check_auth_long_password(self, test_client):
+        long_password = "T1_" + "a" * 996
+        self._test_activate_and_check_auth(test_client, long_password, "unactivateduser5", "goodhash5")
+
     def test_auth_check_user_does_not_exist(self, test_client):
         bad_credentials = "userdoesnotexist:somepassword"
         bad_credentials_base64 = base64.b64encode(bad_credentials.encode('utf-8')).decode('utf-8')
