@@ -25,6 +25,6 @@ setup(
         "Flask-wtf==1.2.1",
         "psycopg2-binary==2.9.5",
         "requests==2.31.0",
-        "Werkzeug==2.3.7"
+        "Werkzeug==3.0.1"
     ],
 )
