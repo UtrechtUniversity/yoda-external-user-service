@@ -8,6 +8,7 @@ on:
 
 jobs:
   push-image:
+    if: github.repository == 'utrechtuniversity/yoda-external-user-service'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
