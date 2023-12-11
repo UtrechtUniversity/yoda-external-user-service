@@ -3,9 +3,10 @@
 __copyright__ = 'Copyright (c) 2021-2023, Utrecht University'
 __license__   = 'GPLv3, see LICENSE'
 
-from typing import Optional, Tuple
 from os import path
 from re import fullmatch
+from typing import Optional, Tuple
+
 from werkzeug.security import safe_join
 from werkzeug.utils import secure_filename
 
