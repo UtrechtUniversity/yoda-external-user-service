@@ -610,6 +610,8 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
             static_dir, asset_name = result
             return send_from_directory(static_dir, asset_name)
 
+        return None
+
     @ app.url_defaults
     def add_cache_buster(endpoint: str, values: Dict[str, str]) -> None:
         """Add cache buster to asset (static) URLs."""
