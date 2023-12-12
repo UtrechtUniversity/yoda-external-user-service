@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 __copyright__ = 'Copyright (c) 2023, Utrecht University'
-__license__ = 'GPLv3, see LICENSE'
+__license__   = 'GPLv3, see LICENSE'
 
 import secrets
 import urllib.parse
 from datetime import datetime
 from os import path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import bcrypt
 from flask import abort, Flask, jsonify, make_response, render_template, request, Response, send_from_directory
@@ -17,6 +17,7 @@ from flask_wtf.csrf import CSRFProtect
 from jinja2 import ChoiceLoader, FileSystemLoader
 from yoda_eus.mail import is_email_valid, send_email_template_if_needed
 from yoda_eus.password_complexity import check_password_complexity
+from yoda_eus.util import get_validated_static_path
 
 
 db = SQLAlchemy()
@@ -350,7 +351,10 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
             return response
 
         if (not is_email_valid(username) and app.config.get("MAIL_ONLY_TO_VALID_ADDRESS").lower() == "true"):
-            errors = {"errors": ["Unable to send password reset email, because your user name ('{}') is not a valid email address.".format(username)]}
+            errors = {
+                "errors": ["Unable to send password reset email, "
+                           "because your user name ('{}') is not a valid email address.".format(username)]
+            }
             response = make_response(render_template('forgot-password.html', **errors))
             response.status_code = 404
             return response
@@ -557,10 +561,14 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
             The EUS presents two web interfaces (vhosts) on two different TCP ports. One of these
             does not have the API available, so that API access can be restricted on a TCP level (e.g. in firewalls).
 
-            If this instance does not have the API enabled, access to API functions is intercepted and blocked by this function.
+            If this instance does not have the API enabled, access to API functions is intercepted
+            and blocked by this function.
             """
             if request.path.startswith("/api/"):
-                abort(make_response(jsonify({'status': 'error', 'message': 'The EUS API has been disabled on this interface.'}), 403))
+                abort(make_response(jsonify({
+                    'status': 'error',
+                    'message': 'The EUS API has been disabled on this interface.'
+                }), 403))
 
     @app.before_request
     def check_api_secret() -> Response:
@@ -575,10 +583,13 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         elif secret_header in request.headers and request.headers[secret_header] == app.config.get("API_SECRET"):
             return
         else:
-            abort(make_response(jsonify({'status': 'error', 'message': 'EUS secret header not present or does not match.'}), 403))
+            abort(make_response(jsonify({
+                'status': 'error',
+                'message': 'EUS secret header not present or does not match.'
+            }), 403))
 
     @app.before_request
-    def static_loader() -> Response:
+    def static_loader() -> Optional[Response]:
         """
         Static files handling - recognisable through '/assets/'
         Override requested static file if present in user_static_area
@@ -589,16 +600,17 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
         :returns: Static file
         """
-        if request.full_path.split('/')[1] == 'assets':
-            user_static_area = path.join(app.config.get('YODA_THEME_PATH'), app.config.get('YODA_THEME'))
-            asset_dir, asset_name = path.split(request.path)
-            static_dir = asset_dir.replace('/assets', user_static_area + '/static')
-            user_static_filename = path.join(static_dir, asset_name)
-
-            if not path.exists(user_static_filename):
-                static_dir = asset_dir.replace('/assets', '/var/www/yoda/static')
-
+        result = get_validated_static_path(
+            request.full_path,
+            request.path,
+            app.config.get('YODA_THEME_PATH'),
+            app.config.get('YODA_THEME')
+        )
+        if result is not None:
+            static_dir, asset_name = result
             return send_from_directory(static_dir, asset_name)
+
+        return None
 
     @ app.url_defaults
     def add_cache_buster(endpoint: str, values: Dict[str, str]) -> None:

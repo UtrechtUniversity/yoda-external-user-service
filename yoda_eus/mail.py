@@ -1,5 +1,5 @@
 __copyright__ = 'Copyright (c) 2023, Utrecht University'
-__license__ = 'GPLv3, see LICENSE'
+__license__   = 'GPLv3, see LICENSE'
 
 import email
 import os
