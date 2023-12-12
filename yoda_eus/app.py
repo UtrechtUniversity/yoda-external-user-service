@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 __copyright__ = 'Copyright (c) 2023, Utrecht University'
-__license__ = 'GPLv3, see LICENSE'
+__license__   = 'GPLv3, see LICENSE'
 
 import secrets
 import urllib.parse
