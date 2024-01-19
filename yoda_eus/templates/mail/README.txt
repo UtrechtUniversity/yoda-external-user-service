@@ -37,4 +37,4 @@ depending on the template name:
     - {{HASH_URL}} (the password reset URL, including a random hash)
 
 All occurrences of these variables will be replaced with their respective values.
-The names must match exactly, including the square brackets.
+The names must match exactly, including the curly brackets.
