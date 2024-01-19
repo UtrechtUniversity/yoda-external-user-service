@@ -4,7 +4,7 @@ The following files should be provided for e-mails to work:
 
 invitation.txt            - sent to external users
 invitation-sent.txt       - sent to group managers
-activation-succesful.txt  - sent to external users
+activation-successful.txt - sent to external users
 invitation-accepted.txt   - sent to group managers
 
 To enable HTML mails, provide '.html' versions of the above e-mails *in
@@ -30,7 +30,7 @@ depending on the template name:
 - invitation-accepted
     - {{USERNAME}}
     - {{CREATOR}}
-- activation-succesful
+- activation-successful
     - {{USERNAME}}
 - reset-password
     - {{USERNAME}} (the external user name)
