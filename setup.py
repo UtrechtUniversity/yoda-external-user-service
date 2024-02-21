@@ -14,17 +14,17 @@ setup(
     entry_points={
     },
     extras_require={
-        "test": ["pytest-flask==1.2.0", "pytest==7.2.1"],
+        "test": ["pytest-flask==1.3.0", "pytest==8.0.1"],
     },
     install_requires=[
         "bcrypt==4.0.1",
         "email-validator==2.0.0",
-        "Flask==2.3.2",
-        "Flask-session2==1.3.1",
+        "Flask==3.0.2",
+        "Flask-session==0.6.0",
         "Flask-SQLAlchemy==3.0.3",
         "Flask-wtf==1.2.1",
         "psycopg2-binary==2.9.5",
         "requests==2.31.0",
-        "Werkzeug==2.3.8"
+        "Werkzeug==3.0.1"
     ],
 )
