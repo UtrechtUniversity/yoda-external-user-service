@@ -66,6 +66,9 @@ class TestMain:
             assert response1.status_code == 201
             response2 = c.post('/api/user/delete', json=rm_params, headers=auth_headers)
             assert response2.status_code == 204
+            # This delete call is to verify that the user is really gone
+            response3 = c.post('/api/user/delete', json=rm_params, headers=auth_headers)
+            assert response3.status_code == 404
 
     def test_add_and_remove_user_twice(self, test_client):
         auth_headers = {'X-Yoda-External-User-Secret': 'dummy_api_secret'}
@@ -87,6 +90,9 @@ class TestMain:
             assert response3.status_code == 204
             response4 = c.post('/api/user/delete', json=rm2_params, headers=auth_headers)
             assert response4.status_code == 204
+            # This delete call is to verify that the user is really gone
+            response5 = c.post('/api/user/delete', json=rm2_params, headers=auth_headers)
+            assert response5.status_code == 404
 
     def test_forgot_password_show_form(self, test_client):
         with test_client as c:
