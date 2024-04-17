@@ -229,6 +229,8 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         if len(UserZone.query.filter_by(user_id=user.id).all()) == 0:
             User.query.filter_by(username=content['username']).delete()
 
+        db.session.commit()
+
         # Return result
         response = {"status": "ok", "message": "User {} deleted from zone {}.".format(content["username"],
                                                                                       content["userzone"])}
