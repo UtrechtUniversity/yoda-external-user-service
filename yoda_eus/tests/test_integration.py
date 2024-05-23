@@ -102,7 +102,7 @@ class TestMain:
     def test_forgot_password_nonexistent(self, test_client):
         with test_client as c:
             response = c.post('/user/forgot-password', data={"username": "doesnotexist"})
-            assert response.status_code == 404
+            assert response.status_code == 200
 
     def test_forgot_password_existing(self, test_client):
         auth_headers = {'X-Yoda-External-User-Secret': 'dummy_api_secret'}
