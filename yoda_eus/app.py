@@ -344,14 +344,6 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
             errors = {"errors": ["Please enter your user name (email address)"]}
             return render_template('forgot-password.html', **errors)
 
-        user = User.query.filter_by(username=username).first()
-
-        if user is None:
-            errors = {"errors": ["User name not found. Only external users can reset their password."]}
-            response = make_response(render_template('forgot-password.html', **errors))
-            response.status_code = 404
-            return response
-
         if (not is_email_valid(username) and app.config.get("MAIL_ONLY_TO_VALID_ADDRESS").lower() == "true"):
             errors = {
                 "errors": ["Unable to send password reset email, "
@@ -360,6 +352,11 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
             response = make_response(render_template('forgot-password.html', **errors))
             response.status_code = 404
             return response
+
+        user = User.query.filter_by(username=username).first()
+        if user is None:
+            # User name not found. Only external users can reset their password.
+            return render_template("forgot-password-successful.html"), 200
 
         # Generate and update user hash
         secret_hash = get_random_hash()
