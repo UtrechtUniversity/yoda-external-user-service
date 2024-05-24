@@ -1,5 +1,5 @@
 ---
-name: "Python"
+name: "Lint and run tests"
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ on:
       - '**'
 
 jobs:
-  lint:
+  job:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
