@@ -529,19 +529,19 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         # Confirm activation to user
         return render_template("reset-password-successful.html", **params), 200
 
-    @ app.errorhandler(403)
+    @app.errorhandler(403)
     def access_forbidden(e: Exception) -> Response:
         return render_template('403.html'), 403
 
-    @ app.errorhandler(404)
+    @app.errorhandler(404)
     def page_not_found(e: Exception) -> Response:
         return render_template('404.html'), 404
 
-    @ app.errorhandler(500)
+    @app.errorhandler(500)
     def internal_error(e: Exception) -> Response:
         return render_template('500.html'), 500
 
-    @ app.after_request
+    @app.after_request
     def add_security_headers(response: Response) -> Response:
         """Add generic security headers."""  # noqa DAR101 DAR201
 
@@ -611,7 +611,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
         return None
 
-    @ app.url_defaults
+    @app.url_defaults
     def add_cache_buster(endpoint: str, values: Dict[str, str]) -> None:
         """Add cache buster to asset (static) URLs."""
         if endpoint.endswith("static"):
