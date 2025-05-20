@@ -19,7 +19,7 @@ setup(
     install_requires=[
         "bcrypt==4.0.1",
         "email-validator==2.0.0",
-        "Flask==3.1.0",
+        "Flask==3.1.1",
         "flask-session==0.8.0",
         "Flask-SQLAlchemy==3.1.1",
         "Flask-WTF==1.2.2",
