@@ -24,7 +24,7 @@ setup(
         "Flask-SQLAlchemy==3.1.1",
         "Flask-WTF==1.2.2",
         "psycopg2-binary==2.9.10",
-        "requests==2.32.3",
+        "requests==2.32.4",
         "Werkzeug==3.1.3"
     ],
 )
