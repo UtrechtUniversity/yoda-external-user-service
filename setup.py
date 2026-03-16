@@ -21,7 +21,7 @@ setup(
         "email-validator==2.0.0",
         "filelock==3.20.3",
         "greenlet==3.3.1",
-        "Flask==3.1.1",
+        "Flask==3.1.3",
         "flask-session==0.8.0",
         "Flask-SQLAlchemy==3.1.1",
         "Flask-WTF==1.2.2",
@@ -29,6 +29,6 @@ setup(
         "requests==2.32.4",
         "SQLAlchemy==2.0.46",
         "urllib3==2.6.3",
-        "Werkzeug==3.1.4"
+        "Werkzeug==3.1.6"
     ],
 )
