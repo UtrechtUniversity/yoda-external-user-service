@@ -47,6 +47,9 @@ def get_validated_static_path(
         if not path.exists(user_static_filename):
             static_dir = safe_join("/var/www/yoda/static", *parts)
 
+        if static_dir is None:
+            return None
+
         return static_dir, asset_name
 
     return None
