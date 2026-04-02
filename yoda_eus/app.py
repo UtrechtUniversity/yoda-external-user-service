@@ -73,8 +73,8 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
     if "DB_OVERRIDE_URI" in app.config:
         app.config["SQLALCHEMY_DATABASE_URI"] = app.config.get("DB_OVERRIDE_URI")
     else:
-        encoded_db_username = urllib.parse.quote_plus(app.config.get("DB_USER"))
-        encoded_db_password = urllib.parse.quote_plus(app.config.get("DB_PASSWORD"))
+        encoded_db_username = urllib.parse.quote_plus(str(app.config.get("DB_USER")))
+        encoded_db_password = urllib.parse.quote_plus(str(app.config.get("DB_PASSWORD")))
         app.config["SQLALCHEMY_DATABASE_URI"] = \
             "{}://{}:{}@{}/{}".format(app.config.get("DB_DIALECT"),
                                       encoded_db_username,
@@ -91,7 +91,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         db.session.commit()
 
     # Add CSRF protection
-    if app.config.get("CSRF_TOKENS_ENABLED").lower() != "false":
+    if str(app.config.get("CSRF_TOKENS_ENABLED")).lower() != "false":
         csrf = CSRFProtect()
         csrf.init_app(app)
 
@@ -104,7 +104,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         app.jinja_env.globals.update(csrf_tokens_enabled=csrf_tokens_enabled)
 
     def csrf_exempt(f):
-        if app.config.get("CSRF_TOKENS_ENABLED").lower() != "false":
+        if str(app.config.get("CSRF_TOKENS_ENABLED")).lower() != "false":
             return csrf.exempt(f)
         else:
             return f
@@ -113,17 +113,20 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
     theme = app.config.get('YODA_THEME', "uu")
     theme_path = app.config.get('YODA_THEME_PATH', "/var/www/yoda/themes")
     full_theme_path = path.join(theme_path, theme)
-    theme_loader = ChoiceLoader([
-        FileSystemLoader(full_theme_path),
-        app.jinja_loader,
-    ])
+    if app.jinja_loader is None:
+        raise Exception("Cannot load Jinja loader.")
+    else:
+        theme_loader = ChoiceLoader([
+            FileSystemLoader(full_theme_path),
+            app.jinja_loader,
+        ])
     app.jinja_loader = theme_loader
 
     # Initialize sessions
     Session(app)
 
     # Load test data if required for integration tests
-    if app.config.get("LOAD_TEST_DATA", "false").lower() != "false":
+    if str(app.config.get("LOAD_TEST_DATA", "false")).lower() != "false":
         with app.app_context():
             now = datetime.now()
             hashed_password = bcrypt.hashpw("Test123456!!!".encode("utf-8"), bcrypt.gensalt())
@@ -160,7 +163,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
         :Returns: Flask response (shows themed empty page)
         """
-        return render_template('index.html')
+        return make_response(render_template('index.html'))
 
     @app.route('/api/user/auth-check', methods=['POST'])
     @csrf_exempt
@@ -173,8 +176,11 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
                   401 + JSON response.
         """
         try:
-            username = request.authorization.username
-            password = request.authorization.password
+            if request.authorization is None:
+                raise BaseException("Did not receive authorization credentials")
+            else:
+                username = str(request.authorization.username)
+                password = str(request.authorization.password)
         except BaseException:
             response_content = {"status": "error", "message": "Did not receive authorization credentials."}
             response = make_response(jsonify(response_content), 401)
@@ -214,13 +220,13 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         for field in compulsory_fields:
             if field not in content:
                 response = {"status": "error", "message": "Missing input field: " + field}
-                return jsonify(response), 401
+                return make_response(jsonify(response), 401)
 
         user = User.query.filter_by(username=content['username']).first()
 
         if user is None:
             response = {"status": "error", "message": "User not found."}
-            return jsonify(response), 404
+            return make_response(jsonify(response), 404)
 
         # Delete zone registration
         UserZone.query.filter_by(user_id=user.id, inviter_zone=content["userzone"]).delete()
@@ -234,7 +240,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         # Return result
         response = {"status": "ok", "message": "User {} deleted from zone {}.".format(content["username"],
                                                                                       content["userzone"])}
-        return jsonify(response), 204
+        return make_response(jsonify(response), 204)
 
     @app.route("/api/user/add", methods=['POST'])
     @csrf_exempt
@@ -255,7 +261,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         for field in compulsory_fields:
             if field not in content:
                 response = {"status": "error", "message": "Missing input field: " + field}
-                return jsonify(response), 401
+                return make_response(jsonify(response), 401)
 
         user = User.query.filter_by(username=content['username']).first()
 
@@ -305,7 +311,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
             # Send response
             response = {"status": "ok", "message": "User created."}
-            return jsonify(response), 201
+            return make_response(jsonify(response), 201)
 
         else:
 
@@ -318,7 +324,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
             # Send response
             response = {"status": "ok", "message": "User already exists."}
-            return jsonify(response), 200
+            return make_response(jsonify(response), 200)
 
     @app.route("/user/forgot-password", methods=['GET'])
     def show_forgot_password_form() -> Response:
@@ -328,7 +334,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
          :Returns: Flask response
         """
-        return render_template('forgot-password.html'), 200
+        return make_response(render_template('forgot-password.html'), 200)
 
     @app.route("/user/forgot-password", methods=['POST'])
     def process_forgot_password() -> Response:
@@ -342,9 +348,9 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         # Check form input and handle errors
         if len(username) == 0:
             errors = {"errors": ["Please enter your user name (email address)"]}
-            return render_template('forgot-password.html', **errors)
+            return make_response(render_template('forgot-password.html', **errors))
 
-        if (not is_email_valid(username) and app.config.get("MAIL_ONLY_TO_VALID_ADDRESS").lower() == "true"):
+        if (not is_email_valid(username) and str(app.config.get("MAIL_ONLY_TO_VALID_ADDRESS")).lower() == "true"):
             errors = {
                 "errors": ["Unable to send password reset email, "
                            "because your user name ('{}') is not a valid email address.".format(username)]
@@ -356,7 +362,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         user = User.query.filter_by(username=username).first()
         if user is None:
             # User name not found. Only external users can reset their password.
-            return render_template("forgot-password-successful.html"), 200
+            return make_response(render_template("forgot-password-successful.html"), 200)
 
         # Generate and update user hash
         secret_hash = get_random_hash()
@@ -375,7 +381,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
                                       "reset-password",
                                       reset_data)
 
-        return render_template("forgot-password-successful.html"), 200
+        return make_response(render_template("forgot-password-successful.html"), 200)
 
     @app.route("/user/activate/<hash>", methods=['GET', 'POST'])
     def process_activate_account_form(hash: str) -> Response:
@@ -391,7 +397,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         if hash is None or hash == "":
             # Failsafe
             failed_params = {"activation_error_message": "Activation link is invalid"}
-            return render_template('activation-error.html', **failed_params), 403
+            return make_response(render_template('activation-error.html', **failed_params), 403)
 
         params: Dict[str, Any] = {"secret_hash": hash}
 
@@ -402,20 +408,20 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
             # Failsafe - it should not be possible that two users have
             # the same hash.
             params = {"activation_error_message": "Internal error."}
-            return render_template('activation-error.html', **params), 500
+            return make_response(render_template('activation-error.html', **params), 500)
         elif len(users) == 0:
             params = {"activation_error_message": "Activation link is invalid."}
-            return render_template('activation-error.html', **params), 403
+            return make_response(render_template('activation-error.html', **params), 403)
         elif users[0].password != "" and users[0].password is not None:
             params = {"activation_error_message": "Sorry, your activation link is no longer valid."}
-            return render_template('activation-error.html', **params), 403
+            return make_response(render_template('activation-error.html', **params), 403)
 
         user = users[0]
         params["username"] = user.username
 
         # If form wasn't submitted, show it
         if request.method == "GET":
-            return render_template("activate.html", **params)
+            return make_response(render_template("activate.html", **params))
 
         # Input validation of form data
         form_inputs = request.form
@@ -423,20 +429,20 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         for field in ["username", "password", "password_again"]:
             if field not in form_inputs or form_inputs[field] == "":
                 params["errors"] = ['Please fill in all required fields.']
-                return render_template("activate.html", **params), 422
+                return make_response(render_template("activate.html", **params), 422)
 
         if form_inputs["password"] != form_inputs["password_again"]:
             params["errors"] = ["The passwords do not match"]
-            return render_template("activate.html", **params), 422
+            return make_response(render_template("activate.html", **params), 422)
 
         password_complexity_errors = check_password_complexity(form_inputs["password"])
         if len(password_complexity_errors) > 0:
             params["errors"] = password_complexity_errors
-            return render_template("activate.html", **params), 422
+            return make_response(render_template("activate.html", **params), 422)
 
         if "cb-activation-tou" not in form_inputs:
             params["errors"] = ["Please check the box for acceptance of the terms of use."]
-            return render_template("activate.html", **params), 422
+            return make_response(render_template("activate.html", **params), 422)
 
         # Activate account
         salt = bcrypt.gensalt()
@@ -461,7 +467,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
                                       activation_data)
 
         # Confirm activation to user
-        return render_template("activation-successful.html", **params), 200
+        return make_response(render_template("activation-successful.html", **params), 200)
 
     @app.route("/user/reset-password/<hash>", methods=['GET', 'POST'])
     def process_reset_password_form(hash: str) -> Response:
@@ -478,7 +484,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         if hash is None or hash == "":
             # Failsafe
             failed_params = {"reset_error_message": "Password reset link is invalid"}
-            return render_template('reset-password-error.html', **failed_params), 403
+            return make_response(render_template('reset-password-error.html', **failed_params), 403)
 
         params: Dict[str, Any] = {"secret_hash": hash}
 
@@ -489,17 +495,17 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
             # Failsafe - it should not be possible that two users have
             # the same hash.
             params = {"reset_error_message": "Internal error."}
-            return render_template('reset-password-error.html', **params), 500
+            return make_response(render_template('reset-password-error.html', **params), 500)
         elif len(users) == 0:
             params = {"reset_error_message": "Password reset link is invalid."}
-            return render_template('reset-password-error.html', **params), 403
+            return make_response(render_template('reset-password-error.html', **params), 403)
 
         user = users[0]
         params["username"] = user.username
 
         # If form wasn't submitted, show it
         if request.method == "GET":
-            return render_template("reset-password.html", **params)
+            return make_response(render_template("reset-password.html", **params))
 
         # Input validation of form data
         form_inputs = request.form
@@ -507,16 +513,16 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         for field in ["username", "password", "password_again"]:
             if field not in form_inputs or form_inputs[field] == "":
                 params["errors"] = ['Please fill in all required fields.']
-                return render_template("reset-password.html", **params), 422
+                return make_response(render_template("reset-password.html", **params), 422)
 
         if form_inputs["password"] != form_inputs["password_again"]:
             params["errors"] = ["The passwords do not match"]
-            return render_template("reset-password.html", **params), 422
+            return make_response(render_template("reset-password.html", **params), 422)
 
         password_complexity_errors = check_password_complexity(form_inputs["password"])
         if len(password_complexity_errors) > 0:
             params["errors"] = password_complexity_errors
-            return render_template("reset-password.html", **params), 422
+            return make_response(render_template("reset-password.html", **params), 422)
 
         # Reset password account
         salt = bcrypt.gensalt()
@@ -527,19 +533,19 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         db.session.commit()
 
         # Confirm activation to user
-        return render_template("reset-password-successful.html", **params), 200
+        return make_response(render_template("reset-password-successful.html", **params), 200)
 
     @app.errorhandler(403)
     def access_forbidden(e: Exception) -> Response:
-        return render_template('403.html'), 403
+        return make_response(render_template('403.html'), 403)
 
     @app.errorhandler(404)
     def page_not_found(e: Exception) -> Response:
-        return render_template('404.html'), 404
+        return make_response(render_template('404.html'), 404)
 
     @app.errorhandler(500)
     def internal_error(e: Exception) -> Response:
-        return render_template('500.html'), 500
+        return make_response(render_template('500.html'), 500)
 
     @app.after_request
     def add_security_headers(response: Response) -> Response:
@@ -555,7 +561,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
     if not enable_api:
         @app.before_request
-        def refuse_api_requests() -> Response:
+        def refuse_api_requests() -> None:
             """
             The EUS presents two web interfaces (vhosts) on two different TCP ports. One of these
             does not have the API available, so that API access can be restricted on a TCP level (e.g. in firewalls).
@@ -570,7 +576,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
                 }), 403))
 
     @app.before_request
-    def check_api_secret() -> Response:
+    def check_api_secret() -> Optional[Response]:
         """
         This ensures that API requests can only be processed if the right API secret is provided.
 
@@ -578,9 +584,9 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
         """
         secret_header = 'X-Yoda-External-User-Secret'
         if not (request.path.startswith("/api/")):
-            return
+            return None
         elif secret_header in request.headers and request.headers[secret_header] == app.config.get("API_SECRET"):
-            return
+            return None
         else:
             abort(make_response(jsonify({
                 'status': 'error',
@@ -599,11 +605,17 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
 
         :returns: Static file
         """
+        yoda_theme = app.config.get('YODA_THEME')
+        yoda_theme_path = app.config.get('YODA_THEME_PATH')
+
+        if yoda_theme is None or yoda_theme_path is None:
+            return None
+
         result = get_validated_static_path(
             request.full_path,
             request.path,
-            app.config.get('YODA_THEME_PATH'),
-            app.config.get('YODA_THEME')
+            str(yoda_theme_path),
+            str(yoda_theme)
         )
         if result is not None:
             static_dir, asset_name = result
@@ -615,7 +627,7 @@ def create_app(config_filename: str = "flask.cfg", enable_api: bool = True) -> F
     def add_cache_buster(endpoint: str, values: Dict[str, str]) -> None:
         """Add cache buster to asset (static) URLs."""
         if endpoint.endswith("static"):
-            values['q'] = app.config.get('YODA_EUS_COMMIT')
+            values['q'] = str(app.config.get('YODA_EUS_COMMIT'))
 
     return app
 
