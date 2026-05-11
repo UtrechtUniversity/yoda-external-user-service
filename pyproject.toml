@@ -14,7 +14,7 @@ dependencies = [
         "psycopg2-binary==2.9.10",
         "requests==2.33.0",
         "SQLAlchemy==2.0.46",
-        "urllib3==2.6.3",
+        "urllib3==2.7.0",
         "Werkzeug==3.1.6"
 ]
 description = "Yoda External User Service"
