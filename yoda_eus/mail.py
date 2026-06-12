@@ -76,18 +76,44 @@ def send_email_template(app, to, subject, template_name, template_data):
     template_path = os.path.join(app.config.get("MAIL_TEMPLATE_DIR"),
                                  app.config.get("MAIL_TEMPLATE"))
 
+    plain_body = _get_plain_body(template_path, template_name, template_data)
+    html_body = _get_html_body(template_path, template_name, template_data)
+
+    send_email(app, to, subject, plain_body, html_body)
+
+
+def _get_plain_body(template_path, template_name, template_data):
+    """Compiles the plain text body of an email based on a template
+       and template data
+
+    :param template_path:      Path where the templates can be found
+    :param template_name:      Name of the template in the template directory to use, excluding extensions
+    :param template_data:      Variables to interpolate, as a dictionary
+
+    :returns:                  Plain text body for email
+    """
     text_template = Path(os.path.join(template_path, template_name + ".txt.j2")).read_text()
+    plain_body_template = Environment(loader=BaseLoader).from_string(text_template)
+    return plain_body_template.render(**template_data)
+
+
+def _get_html_body(template_path, template_name, template_data):
+    """Compiles the HTML body of an email based on a template
+       and template data
+
+    :param template_path:      Path where the templates can be found
+    :param template_name:      Name of the template in the template directory to use, excluding extensions
+    :param template_data:      Variables to interpolate, as a dictionary
+
+    :returns:                  Plain text body for email
+    """
     html_main_template = Path(os.path.join(template_path, template_name + ".html.j2")).read_text()
     html_header_template = Path(os.path.join(template_path, "common-start.html.j2")).read_text()
     html_footer_template = Path(os.path.join(template_path, "common-end.html.j2")).read_text()
     html_full_template = html_header_template + html_main_template + html_footer_template
 
-    plain_body_template = Environment(loader=BaseLoader).from_string(text_template)
-    plain_body = plain_body_template.render(**template_data)
-    html_body_template = Environment(loader=BaseLoader).from_string(html_full_template)
-    html_body = html_body_template.render(**template_data)
-
-    send_email(app, to, subject, plain_body, html_body)
+    html_body_template = Environment(loader=BaseLoader, autoescape=True).from_string(html_full_template)
+    return html_body_template.render(**template_data)
 
 
 def send_email(app, to, subject, plain_body, html_body):
