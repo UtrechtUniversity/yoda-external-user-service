@@ -1,10 +1,10 @@
-__copyright__ = 'Copyright (c) 2023, Utrecht University'
-__license__   = 'GPLv3, see LICENSE'
+__copyright__ = 'Copyright (c) 2023-2026, Utrecht University'
+__license__  = 'GPLv3, see LICENSE'
 
 import string
 from unittest.mock import patch
 
-from yoda_eus.mail import is_email_valid
+from yoda_eus.mail import _get_html_body, _get_plain_body, is_email_valid
 from yoda_eus.password_complexity import check_password_complexity
 from yoda_eus.util import get_validated_static_path
 
@@ -140,3 +140,124 @@ class TestMain:
             )
             is None
         )
+
+    def test_plain_body_email(self):
+        template_parameters = {"USERNAME": "user",
+                               "CREATOR": "creator",
+                               "HASH_URL": "https://hashurl"}
+        expected_body = """Hello user,
+
+A Yoda account has been created for you by creator.
+Please contact this person in case it is unclear why
+you have received this invitation.
+
+Yoda is a research data management system.
+You can activate your account by visiting the following webpage:
+
+https://hashurl
+
+More information on Yoda can be found at https://www.uu.nl/yoda
+
+Kind regards,
+
+The Yoda External User Service"""
+
+        assert (_get_plain_body("templates/mail/uu",
+                                "invitation",
+                                template_parameters)
+                == expected_body)
+
+    def test_html_body_email(self):
+        template_parameters = {"USERNAME": "user",
+                               "CREATOR": "creator",
+                               "HASH_URL": "https://hashurl"}
+        expected_body = """<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+<p>
+Hello user,
+</p>
+
+<p>
+A Yoda account has been created for you by creator.
+Please contact this person in case it is unclear why
+you have received this invitation.
+</p>
+
+<p>
+Yoda is a research data management system.
+You can activate your account by visiting the following webpage:
+</p>
+
+<a href="https://hashurl">https://hashurl</a>
+
+<p>
+More information on Yoda can be found 
+at <a href="https://www.uu.nl/yoda">https://www.uu.nl/yoda</a>
+</p>
+
+<p>
+Kind regards,
+</p>
+
+<p>
+The Yoda External User Service
+</p>
+    </body>
+</html>"""  # noqa W291
+        assert (_get_html_body("templates/mail/uu",
+                               "invitation",
+                               template_parameters)
+                == expected_body)
+
+    def test_html_body_email_escape_text(self):
+        # Ensure that we are preventing HTML injection in HTML templates
+        template_parameters = {"USERNAME": "user",
+                               "CREATOR": "<script>alert( 'Creator!');</script>",
+                               "HASH_URL": "https://hashurl"}
+        expected_body = """<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+<p>
+Hello user,
+</p>
+
+<p>
+A Yoda account has been created for you by &lt;script&gt;alert( &#39;Creator!&#39;);&lt;/script&gt;.
+Please contact this person in case it is unclear why
+you have received this invitation.
+</p>
+
+<p>
+Yoda is a research data management system.
+You can activate your account by visiting the following webpage:
+</p>
+
+<a href="https://hashurl">https://hashurl</a>
+
+<p>
+More information on Yoda can be found 
+at <a href="https://www.uu.nl/yoda">https://www.uu.nl/yoda</a>
+</p>
+
+<p>
+Kind regards,
+</p>
+
+<p>
+The Yoda External User Service
+</p>
+    </body>
+</html>"""  # noqa W291
+        assert (_get_html_body("templates/mail/uu",
+                               "invitation",
+                               template_parameters)
+                == expected_body)
