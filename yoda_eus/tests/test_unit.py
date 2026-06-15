@@ -1,9 +1,11 @@
 __copyright__ = 'Copyright (c) 2023-2026, Utrecht University'
 __license__  = 'GPLv3, see LICENSE'
 
+import re
 import string
 from unittest.mock import patch
 
+from yoda_eus.app import get_random_hash
 from yoda_eus.mail import _get_html_body, _get_plain_body, is_email_valid
 from yoda_eus.password_complexity import check_password_complexity
 from yoda_eus.util import get_validated_static_path
@@ -13,17 +15,27 @@ class TestMain:
     def test_password_validation_ok(self):
         result = check_password_complexity("Test123456789!")
         assert len(result) == 0
+        # Exactly 10 characters is also accepted.
+        assert check_password_complexity("Aa1!aaaaaa") == []
+        # Exactly 1000 characters is also accepted
+        password = "Aa1!" + "a" * 996
+        assert len(password) == 1000
+        assert check_password_complexity(password) == []
 
     def test_password_validation_empty(self):
         result = check_password_complexity("")
         assert result == ["Password is empty"]
 
     def test_password_validation_too_short(self):
-        result = check_password_complexity("Tt1!")
+        result = check_password_complexity("Aa1!aaaaa")
         assert result == ["Password is too short: it needs to be at least 10 characters."]
 
     def test_password_validation_too_long(self):
         result = check_password_complexity(200 * "Test12345!")
+        assert result == ["Password is too long: it can be no more than 1000 characters."]
+        password = "Aa1!" + "a" * 997
+        assert len(password) == 1001
+        result = check_password_complexity(password)
         assert result == ["Password is too long: it can be no more than 1000 characters."]
 
     def test_password_validation_no_lowercase(self):
@@ -57,12 +69,6 @@ class TestMain:
             )
             in result
         )
-
-    def test_is_email_valid_yes(self):
-        assert is_email_valid("yoda@uu.nl")
-
-    def test_is_email_valid_no(self):
-        assert not is_email_valid("this is not a valid email address")
 
     def exists_return_value(self, pathname):
         """ Mock path.exists function. True if path does not contain "theme" and "uu" """
@@ -140,6 +146,39 @@ class TestMain:
             )
             is None
         )
+
+    @patch("os.path.exists")
+    def test_static_loader_path_too_short(self, mock_exists):
+        mock_exists.side_effect = self.exists_return_value
+        # Fewer than three path segments: no asset can be addressed.
+        assert (
+            get_validated_static_path("/assets", "/assets", "/var/www/yoda/themes", "uu")
+            is None
+        )
+
+    @patch("os.path.exists")
+    def test_static_loader_not_assets_prefix(self, mock_exists):
+        mock_exists.side_effect = self.exists_return_value
+        # Second segment must be "assets".
+        assert (
+            get_validated_static_path(
+                "/foo/img/logo.svg", "/foo/img/logo.svg", "/var/www/yoda/themes", "uu"
+            )
+            is None
+        )
+
+    @patch("os.path.exists")
+    def test_static_loader_nested_subdirectory(self, mock_exists):
+        mock_exists.side_effect = self.exists_return_value
+        # Nested asset directories are preserved in the returned static dir.
+        static_dir, asset_name = get_validated_static_path(
+            "/assets/css/sub/app.css?x",
+            "/assets/css/sub/app.css",
+            "/var/www/yoda/themes",
+            "wur",
+        )
+        assert static_dir == "/var/www/yoda/themes/wur/static/css/sub"
+        assert asset_name == "app.css"
 
     def test_plain_body_email(self):
         template_parameters = {"USERNAME": "user",
@@ -261,3 +300,49 @@ The Yoda External User Service
                                "invitation",
                                template_parameters)
                 == expected_body)
+
+    # Test cases is_email_valid
+    def test_is_email_valid_normal_address(self):
+        assert is_email_valid("yoda@uu.nl")
+
+    def test_is_email_valid_empty(self):
+        assert not is_email_valid("")
+
+    def test_is_email_valid_missing_at(self):
+        assert not is_email_valid("plainstring")
+
+    def test_is_email_valid_missing_domain(self):
+        assert not is_email_valid("@nodomain.nl")
+
+    def test_is_email_valid_missing_tld(self):
+        # A bare hostname without a top-level domain is not accepted.
+        assert not is_email_valid("no@tld")
+        assert not is_email_valid("user@localhost")
+
+    def test_is_email_valid_double_at(self):
+        assert not is_email_valid("two@@at.nl")
+
+    def test_is_email_valid_surrounding_whitespace(self):
+        # Leading/trailing whitespace is not stripped and makes the address invalid.
+        assert not is_email_valid(" yoda@uu.nl ")
+
+    def test_is_email_valid_display_name(self):
+        # The "Display Name <addr>" form is not a bare address and is rejected.
+        assert not is_email_valid("Yoda <yoda@uu.nl>")
+
+    def test_is_email_valid_short_domain(self):
+        # A minimal but well-formed address is accepted.
+        assert is_email_valid("a@b.co")
+
+    # get_random_hash tests
+    def test_get_random_hash_length(self):
+        # secrets.token_hex(32) yields 64 hexadecimal characters.
+        assert len(get_random_hash()) == 64
+
+    def test_get_random_hash_is_hex(self):
+        assert re.fullmatch("[0-9a-f]{64}", get_random_hash()) is not None
+
+    def test_get_random_hash_is_random(self):
+        # Successive calls should not collide.
+        hashes = {get_random_hash() for _ in range(5)}
+        assert len(hashes) == 5
