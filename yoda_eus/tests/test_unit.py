@@ -58,10 +58,10 @@ class TestMain:
             in result
         )
 
-    def is_email_valid_yes(self):
+    def test_is_email_valid_yes(self):
         assert is_email_valid("yoda@uu.nl")
 
-    def is_email_valid_no(self):
+    def test_is_email_valid_no(self):
         assert not is_email_valid("this is not a valid email address")
 
     def exists_return_value(self, pathname):
