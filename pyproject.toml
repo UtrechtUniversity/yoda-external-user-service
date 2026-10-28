@@ -15,7 +15,7 @@ dependencies = [
         "requests==2.33.0",
         "SQLAlchemy==2.0.46",
         "urllib3==2.8.0",
-        "Werkzeug==3.1.6"
+        "Werkzeug==3.1.9"
 ]
 description = "Yoda External User Service"
 license = "GPL-3.0-only"
